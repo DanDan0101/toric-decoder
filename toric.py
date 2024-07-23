@@ -12,7 +12,7 @@ class State:
     """
     L: lattice size
     N: number of anyons
-    q: anyons, ∈ ℤ/2ℤ
+    q: anyon field, ∈ ℤ/2ℤ
     Φ: field, ∈ ℝ
     """
     def __init__(self, L: int, N: int, q: np.ndarray):
@@ -31,22 +31,22 @@ class State:
         plt.colorbar()
         plt.show()
 
-def init_state(L: int, p_anyon: float) -> State:
+def init_state(L: int, p_error: float) -> State:
     """
     Initializes a state with a random distribution of anyons.
 
     Parameters:
     L (int): The size of the lattice.
-    p_anyon (float): The probability of an anyon being present at a given site.
+    p_error (float): The probability of an X error occuring per spin.
 
     Returns:
     State: The initialized state object, with zero field.
     """
 
-    vert_anyons = (np.random.rand(L, L) < p_anyon).astype(np.int32)
+    vert_anyons = (np.random.rand(L, L) < p_error).astype(np.int32)
     vert_anyons += np.roll(vert_anyons, 1, axis=0)
 
-    horiz_anyons = (np.random.rand(L, L) < p_anyon).astype(np.int32)
+    horiz_anyons = (np.random.rand(L, L) < p_error).astype(np.int32)
     horiz_anyons += np.roll(horiz_anyons, 1, axis=1)
     
     q = (vert_anyons + horiz_anyons) % 2
