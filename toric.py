@@ -14,9 +14,9 @@ class State:
     """
     L (int): lattice size
     N (int): number of anyons
-    q (L x L np.ndarray): anyon field, ∈ ℤ/2ℤ
-    error (L x L x 2 np.ndarray): error configuration, ∈ ℤ/2ℤ
-    Φ (L x L np.ndarray): field, ∈ ℝ
+    q (np.ndarray): L x L array representing the anyon field, ∈ ℤ/2ℤ
+    error (np.ndarray): L x L x 2 array representing the error configuration, ∈ ℤ/2ℤ
+    Φ (np.ndarray): L x L array representing the field, ∈ ℝ
     """
     def __init__(self, L: int, N: int, q: np.ndarray, error: np.ndarray):
         self.L = L
@@ -24,31 +24,6 @@ class State:
         self.q = q
         self.error = error
         self.Φ = np.zeros((L, L), dtype = np.float32)
-    
-    def error_layout(self) -> LineCollection:
-        """
-        Helper function for plotting errors along gridlines.
-
-        Returns:
-        LineCollection: A collection of line segments representing the errors.
-        """
-        errors = np.argwhere(self.error).astype(np.float32)
-        x_errors = errors[errors[:,2] == 0][:,:-1]
-        y_errors = errors[errors[:,2] == 1][:,:-1]
-
-        x_left = x_errors - 0.5
-        x_right = x_left.copy()
-        x_right[:,0] += 1
-        x_lines = np.stack([x_left, x_right], axis = 1)
-
-        y_left = y_errors - 0.5
-        y_right = y_left.copy()
-        y_right[:,1] += 1
-        y_lines = np.stack([y_left, y_right], axis = 1)
-
-        lines = np.concatenate([x_lines, y_lines], axis = 0)
-
-        return LineCollection(lines, linewidths = 3, colors = 'r')
 
     def draw(self, draw_error: bool = True) -> Axes:
         """
@@ -65,7 +40,7 @@ class State:
         ax.set_xlabel('x')
         ax.set_ylabel('y')
         if draw_error:
-            ax.add_collection(self.error_layout())
+            ax.add_collection(error_layout(self.error)[1])
         return ax
     
     def update_field(self, η: float) -> None:
@@ -110,6 +85,35 @@ class State:
                     self.error[(x + 1) % self.L, y, 1] ^= 1
                 else:
                     raise ValueError("Invalid direction")
+
+def error_layout(error: np.ndarray) -> LineCollection:
+    """
+    Helper function for plotting errors along gridlines.
+
+    Parameters:
+    error (np.ndarray): L x L x 2 array representing the error configuration, ∈ ℤ/2ℤ.
+
+    Returns:
+    np.ndarray: The line segments representing the errors.
+    LineCollection: A collection of line segments representing the errors.
+    """
+    errors = np.argwhere(error).astype(np.float32)
+    x_errors = errors[errors[:,2] == 0][:,:-1]
+    y_errors = errors[errors[:,2] == 1][:,:-1]
+
+    x_left = x_errors - 0.5
+    x_right = x_left.copy()
+    x_right[:,0] += 1
+    x_lines = np.stack([x_left, x_right], axis = 1)
+
+    y_left = y_errors - 0.5
+    y_right = y_left.copy()
+    y_right[:,1] += 1
+    y_lines = np.stack([y_left, y_right], axis = 1)
+
+    lines = np.concatenate([x_lines, y_lines], axis = 0)
+
+    return lines, LineCollection(lines, linewidths = 3, colors = 'r')
 
 def init_state(L: int, p_error: float) -> State:
     """
