@@ -7,6 +7,7 @@ rocket = sns.color_palette("rocket", as_cmap=True)
 import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
 from matplotlib.axes import Axes
+import matplotlib.animation as animation
 
 WINDOW = np.array([-1, 0, 1])
 
@@ -39,8 +40,9 @@ class State:
         ax.matshow(self.q.T, origin = 'lower', cmap = rocket)
         ax.set_xlabel('x')
         ax.set_ylabel('y')
+        ax.xaxis.tick_bottom()
         if draw_error:
-            ax.add_collection(error_layout(self.error)[1])
+            ax.add_collection(error_layout(self.error))
         return ax
     
     def update_field(self, η: float) -> None:
@@ -94,7 +96,6 @@ def error_layout(error: np.ndarray) -> LineCollection:
     error (np.ndarray): L x L x 2 array representing the error configuration, ∈ ℤ/2ℤ.
 
     Returns:
-    np.ndarray: The line segments representing the errors.
     LineCollection: A collection of line segments representing the errors.
     """
     errors = np.argwhere(error).astype(np.float32)
@@ -113,7 +114,7 @@ def error_layout(error: np.ndarray) -> LineCollection:
 
     lines = np.concatenate([x_lines, y_lines], axis = 0)
 
-    return lines, LineCollection(lines, linewidths = 3, colors = 'r')
+    return LineCollection(lines, linewidths = 3, colors = 'r')
 
 def init_state(L: int, p_error: float) -> State:
     """
@@ -136,3 +137,63 @@ def init_state(L: int, p_error: float) -> State:
     q = vert_anyons ^ horiz_anyons
     N = np.sum(q)
     return State(L, N, q, np.stack([x_errors, y_errors], axis = 2))
+
+def plot_evolution(q_history: np.ndarray, error_history: np.ndarray, trail: bool) -> animation.FuncAnimation:
+    """
+    Plot the evolution of the anyon position history.
+
+    Parameters:
+    q_history (np.ndarray): T x L x L array representing the anyon position history.
+    error_history (np.ndarray): T x L x L x 2 array representing the error history.
+    trail (bool): Whether to display a trail behind the anyon as it moves.
+
+    Returns:
+    animation.FuncAnimation: Animation of the anyon evolution.
+    """
+
+    fig, ax = plt.subplots()
+    mat = ax.matshow(q_history[0,:,:].T, origin = 'lower', cmap = rocket)
+    ax.set_xlabel('x')
+    ax.set_ylabel('y')
+    ax.set_title('Anyon and error evolution')
+    ax.xaxis.tick_bottom()
+    line = error_layout(error_history[0,:,:,:])
+    ax.add_collection(line)
+
+    def update(i):
+        if trail and i > 0:
+            previous = q_history[i-1::-1,:,:]
+            weights = 2 ** np.arange(-1, -i-1, -1, dtype = np.float32)
+            history = np.tensordot(previous, weights, axes = (0, 0))
+            mat.set_data(np.maximum(q_history[i,:,:], history).T)
+        else:
+            mat.set_data(q_history[i,:,:].T)
+        line.set_segments(error_layout(error_history[i,:,:,:]).get_segments())
+        return (mat, line)
+    
+    return animation.FuncAnimation(fig = fig, func = update, frames = T, interval = 250)
+
+def decoder_2D(state: State, T: int, c: int, η: float) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Run a 2D decoder on a state for T epochs.
+
+    Parameters:
+    state (State): The state to decode.
+    T (int): Number of epochs to run.
+    c (int): Field velocity.
+    η (float): Smoothing parameter.
+
+    Returns:
+    np.ndarray: T x L x L array representing the anyon position history.
+    np.ndarray: T x L x L x 2 array representing the error history.
+    """
+    q_history = []
+    error_history = []
+    for _ in range(T):
+        for _ in range(c):
+            state.update_field(η)
+        state.update_anyon()
+        q_history.append(state.q.copy())
+        error_history.append(state.error.copy())
+    return np.array(q_history), np.array(error_history)
+
