@@ -179,7 +179,7 @@ def plot_evolution(q_history: np.ndarray, error_history: np.ndarray, trail: bool
     
     return animation.FuncAnimation(fig = fig, func = update, frames = q_history.shape[0], interval = 250)
 
-def decoder_2D(state: State, T: int, c: int, η: float) -> tuple[np.ndarray, np.ndarray]:
+def decoder_2D(state: State, T: int, c: int, η: float, history: bool) -> None | tuple[np.ndarray, np.ndarray]:
     """
     Run a 2D decoder on a state for T epochs.
 
@@ -188,6 +188,7 @@ def decoder_2D(state: State, T: int, c: int, η: float) -> tuple[np.ndarray, np.
     T (int): Number of epochs to run.
     c (int): Field velocity.
     η (float): Smoothing parameter.
+    history (bool): Whether to return the history of anyon positions and errors.
 
     Returns:
     np.ndarray: T x L x L array representing the anyon position history.
@@ -200,11 +201,13 @@ def decoder_2D(state: State, T: int, c: int, η: float) -> tuple[np.ndarray, np.
         for _ in range(c):
             state.update_field(η)
         state.update_anyon()
-        q_history.append(state.q.copy())
-        error_history.append(state.error.copy())
+        if history:
+            q_history.append(state.q.copy())
+            error_history.append(state.error.copy())
         if state.N == 0:
             break
-    return np.array(q_history), np.array(error_history)
+    if history:
+        return np.array(q_history), np.array(error_history)
 
 def logical_error(error: np.ndarray) -> bool:
     """
