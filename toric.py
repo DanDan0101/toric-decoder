@@ -19,6 +19,7 @@ class State:
     error (np.ndarray): L x L x 2 array representing the error configuration, ∈ ℤ/2ℤ
     Φ (np.ndarray): L x L array representing the field, ∈ ℝ
     """
+
     def __init__(self, L: int, N: int, q: np.ndarray, error: np.ndarray):
         self.L = L
         self.N = N
@@ -36,6 +37,7 @@ class State:
         Returns:
         Axes: The matplotlib axes object containing the plot.
         """
+
         _, ax = plt.subplots()
         ax.matshow(self.q.T, origin = 'lower', cmap = rocket)
         ax.set_xlabel('x')
@@ -55,6 +57,7 @@ class State:
         Returns:
         None
         """
+
         self.Φ += η / 4 * laplace(self.Φ, mode='wrap')
         self.Φ += self.q
     
@@ -65,6 +68,7 @@ class State:
         Returns:
         None
         """
+
         for x, y in np.argwhere(self.q):
             idx = x * self.L + y
             shifts = np.add.outer(WINDOW * self.L, WINDOW).flatten()
@@ -87,6 +91,7 @@ class State:
                     self.error[(x + 1) % self.L, y, 1] ^= 1
                 else:
                     raise ValueError("Invalid direction")
+        self.N = np.sum(self.q)
 
 def error_layout(error: np.ndarray) -> LineCollection:
     """
@@ -98,6 +103,7 @@ def error_layout(error: np.ndarray) -> LineCollection:
     Returns:
     LineCollection: A collection of line segments representing the errors.
     """
+
     errors = np.argwhere(error).astype(np.float32)
     x_errors = errors[errors[:,2] == 0][:,:-1]
     y_errors = errors[errors[:,2] == 1][:,:-1]
@@ -114,7 +120,7 @@ def error_layout(error: np.ndarray) -> LineCollection:
 
     lines = np.concatenate([x_lines, y_lines], axis = 0)
 
-    return LineCollection(lines, linewidths = 3, colors = 'r')
+    return LineCollection(lines, colors = 'r')
 
 def init_state(L: int, p_error: float) -> State:
     """
@@ -171,7 +177,7 @@ def plot_evolution(q_history: np.ndarray, error_history: np.ndarray, trail: bool
         line.set_segments(error_layout(error_history[i,:,:,:]).get_segments())
         return (mat, line)
     
-    return animation.FuncAnimation(fig = fig, func = update, frames = T, interval = 250)
+    return animation.FuncAnimation(fig = fig, func = update, frames = q_history.shape[0], interval = 250)
 
 def decoder_2D(state: State, T: int, c: int, η: float) -> tuple[np.ndarray, np.ndarray]:
     """
@@ -187,6 +193,7 @@ def decoder_2D(state: State, T: int, c: int, η: float) -> tuple[np.ndarray, np.
     np.ndarray: T x L x L array representing the anyon position history.
     np.ndarray: T x L x L x 2 array representing the error history.
     """
+
     q_history = []
     error_history = []
     for _ in range(T):
@@ -195,5 +202,25 @@ def decoder_2D(state: State, T: int, c: int, η: float) -> tuple[np.ndarray, np.
         state.update_anyon()
         q_history.append(state.q.copy())
         error_history.append(state.error.copy())
+        if state.N == 0:
+            break
     return np.array(q_history), np.array(error_history)
 
+def logical_error(error: np.ndarray) -> bool:
+    """
+    Checks if the error configuration corresponds to a logical error.
+
+    Parameters:
+    error (np.ndarray): L x L x 2 array representing the error configuration.
+
+    Returns:
+    bool: Whether there is a logical error.
+    """
+
+    x_errors = error[:,:,0]
+    y_errors = error[:,:,1]
+
+    x_parity = x_errors.sum(axis = 0) % 2
+    y_parity = y_errors.sum(axis = 1) % 2
+
+    return x_parity.any() or y_parity.any()
