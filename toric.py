@@ -93,12 +93,13 @@ class State:
                     raise ValueError("Invalid direction")
         self.N = np.sum(self.q)
 
-def error_layout(error: np.ndarray) -> LineCollection:
+def error_layout(error: np.ndarray, dual: bool = True) -> LineCollection:
     """
     Helper function for plotting errors along gridlines.
 
     Parameters:
     error (np.ndarray): L x L x 2 array representing the error configuration, ∈ ℤ/2ℤ.
+    dual (bool): Whether to plot the errors on the dual lattice.
 
     Returns:
     LineCollection: A collection of line segments representing the errors.
@@ -108,16 +109,25 @@ def error_layout(error: np.ndarray) -> LineCollection:
     x_errors = errors[errors[:,2] == 0][:,:-1]
     y_errors = errors[errors[:,2] == 1][:,:-1]
 
-    x_left = x_errors - 0.5
-    x_right = x_left.copy()
-    x_right[:,0] += 1
+    if dual:
+        x_left = x_errors.copy()
+        x_right = x_errors.copy()
+        x_right[:,1] -= 1
+
+        y_left = y_errors.copy()
+        y_right = y_errors.copy()
+        y_left[:,0] -= 1
+    else:
+        x_left = x_errors - 0.5
+        x_right = x_left.copy()
+        x_right[:,0] += 1
+
+        y_left = y_errors - 0.5
+        y_right = y_left.copy()
+        y_right[:,1] += 1
+    
     x_lines = np.stack([x_left, x_right], axis = 1)
-
-    y_left = y_errors - 0.5
-    y_right = y_left.copy()
-    y_right[:,1] += 1
     y_lines = np.stack([y_left, y_right], axis = 1)
-
     lines = np.concatenate([x_lines, y_lines], axis = 0)
 
     return LineCollection(lines, colors = 'r')
@@ -144,7 +154,7 @@ def init_state(L: int, p_error: float) -> State:
     N = np.sum(q)
     return State(L, N, q, np.stack([x_errors, y_errors], axis = 2))
 
-def plot_evolution(q_history: np.ndarray, error_history: np.ndarray, trail: bool) -> animation.FuncAnimation:
+def plot_evolution(q_history: np.ndarray, error_history: np.ndarray, trail: bool, dual: bool = True) -> animation.FuncAnimation:
     """
     Plot the evolution of the anyon position history.
 
@@ -152,6 +162,7 @@ def plot_evolution(q_history: np.ndarray, error_history: np.ndarray, trail: bool
     q_history (np.ndarray): T x L x L array representing the anyon position history.
     error_history (np.ndarray): T x L x L x 2 array representing the error history.
     trail (bool): Whether to display a trail behind the anyon as it moves.
+    dual (bool): Whether to display the errors on the dual lattice.
 
     Returns:
     animation.FuncAnimation: Animation of the anyon evolution.
@@ -163,7 +174,7 @@ def plot_evolution(q_history: np.ndarray, error_history: np.ndarray, trail: bool
     ax.set_ylabel('y')
     ax.set_title('Anyon and error evolution')
     ax.xaxis.tick_bottom()
-    line = error_layout(error_history[0,:,:,:])
+    line = error_layout(error_history[0,:,:,:], dual = dual)
     ax.add_collection(line)
 
     def update(i):
@@ -174,7 +185,7 @@ def plot_evolution(q_history: np.ndarray, error_history: np.ndarray, trail: bool
             mat.set_data(np.maximum(q_history[i,:,:], history).T)
         else:
             mat.set_data(q_history[i,:,:].T)
-        line.set_segments(error_layout(error_history[i,:,:,:]).get_segments())
+        line.set_segments(error_layout(error_history[i,:,:,:], dual = dual).get_segments())
         return (mat, line)
     
     return animation.FuncAnimation(fig = fig, func = update, frames = q_history.shape[0], interval = 250)
@@ -201,6 +212,7 @@ def decoder_2D(state: State, T: int, c: int, η: float, history: bool) -> None |
         for _ in range(c):
             state.update_field(η)
         state.update_anyon()
+        # Add some errors
         if history:
             q_history.append(state.q.copy())
             error_history.append(state.error.copy())
