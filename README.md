@@ -9,6 +9,8 @@ We assume that only $X$ errors may occur, independently Bernoulli distributed on
 * `numpy`
 * `scipy`
 * `matplotlib`
-* `IPython`
-* `cupy`
+* `seaborn`
 * `tqdm`
+* `networkx`
+* `pymatching`
+* `multiprocess`
