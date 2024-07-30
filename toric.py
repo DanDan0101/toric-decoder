@@ -9,6 +9,8 @@ from matplotlib.collections import LineCollection
 from matplotlib.axes import Axes
 import matplotlib.animation as animation
 
+from typing import Union
+
 WINDOW = np.array([-1, 0, 1])
 
 class State:
@@ -190,7 +192,7 @@ def plot_evolution(q_history: np.ndarray, error_history: np.ndarray, trail: bool
     
     return animation.FuncAnimation(fig = fig, func = update, frames = q_history.shape[0], interval = 250)
 
-def decoder_2D(state: State, T: int, c: int, η: float, history: bool) -> None | tuple[np.ndarray, np.ndarray]:
+def decoder_2D(state: State, T: int, c: int, η: float, history: bool) -> Union[None, tuple[np.ndarray, np.ndarray]]:
     """
     Run a 2D decoder on a state for T epochs.
 
