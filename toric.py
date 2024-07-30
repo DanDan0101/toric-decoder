@@ -2,7 +2,7 @@ import numpy as np
 from scipy.ndimage import laplace
 
 import seaborn as sns
-rocket = sns.color_palette("rocket", as_cmap=True)
+mako = sns.color_palette("mako", as_cmap=True)
 
 import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
@@ -41,12 +41,12 @@ class State:
         """
 
         _, ax = plt.subplots()
-        ax.matshow(self.q.T, origin = 'lower', cmap = rocket)
+        ax.matshow(self.q.T, origin = 'lower', cmap = mako)
         ax.set_xlabel('x')
         ax.set_ylabel('y')
         ax.xaxis.tick_bottom()
         if draw_error:
-            ax.add_collection(error_layout(self.error))
+            ax.add_collection(error_layout(self.error, dual = True))
         return ax
     
     def update_field(self, η: float) -> None:
@@ -95,45 +95,6 @@ class State:
                     raise ValueError("Invalid direction")
         self.N = np.sum(self.q)
 
-def error_layout(error: np.ndarray, dual: bool = True) -> LineCollection:
-    """
-    Helper function for plotting errors along gridlines.
-
-    Parameters:
-    error (np.ndarray): L x L x 2 array representing the error configuration, ∈ ℤ/2ℤ.
-    dual (bool): Whether to plot the errors on the dual lattice.
-
-    Returns:
-    LineCollection: A collection of line segments representing the errors.
-    """
-
-    errors = np.argwhere(error).astype(np.float32)
-    x_errors = errors[errors[:,2] == 0][:,:-1]
-    y_errors = errors[errors[:,2] == 1][:,:-1]
-
-    if dual:
-        x_left = x_errors.copy()
-        x_right = x_errors.copy()
-        x_right[:,1] -= 1
-
-        y_left = y_errors.copy()
-        y_right = y_errors.copy()
-        y_left[:,0] -= 1
-    else:
-        x_left = x_errors - 0.5
-        x_right = x_left.copy()
-        x_right[:,0] += 1
-
-        y_left = y_errors - 0.5
-        y_right = y_left.copy()
-        y_right[:,1] += 1
-    
-    x_lines = np.stack([x_left, x_right], axis = 1)
-    y_lines = np.stack([y_left, y_right], axis = 1)
-    lines = np.concatenate([x_lines, y_lines], axis = 0)
-
-    return LineCollection(lines, colors = 'r')
-
 def init_state(L: int, p_error: float) -> State:
     """
     Initializes a state with a random distribution of anyons.
@@ -156,41 +117,27 @@ def init_state(L: int, p_error: float) -> State:
     N = np.sum(q)
     return State(L, N, q, np.stack([x_errors, y_errors], axis = 2))
 
-def plot_evolution(q_history: np.ndarray, error_history: np.ndarray, trail: bool, dual: bool = True) -> animation.FuncAnimation:
+def logical_error(error: np.ndarray, mwpm: bool = True) -> bool:
     """
-    Plot the evolution of the anyon position history.
+    Checks if the error configuration corresponds to a logical error.
 
     Parameters:
-    q_history (np.ndarray): T x L x L array representing the anyon position history.
-    error_history (np.ndarray): T x L x L x 2 array representing the error history.
-    trail (bool): Whether to display a trail behind the anyon as it moves.
-    dual (bool): Whether to display the errors on the dual lattice.
+    error (np.ndarray): L x L x 2 array representing the error configuration.
+    mwpm (bool): Whether to use minimum-weight perfect-matching to eliminate remaining anyons.
 
     Returns:
-    animation.FuncAnimation: Animation of the anyon evolution.
+    bool: Whether there is a logical error.
     """
 
-    fig, ax = plt.subplots()
-    mat = ax.matshow(q_history[0,:,:].T, origin = 'lower', cmap = rocket)
-    ax.set_xlabel('x')
-    ax.set_ylabel('y')
-    ax.set_title('Anyon and error evolution')
-    ax.xaxis.tick_bottom()
-    line = error_layout(error_history[0,:,:,:], dual = dual)
-    ax.add_collection(line)
+    # TODO: Implement minimum-weight perfect-matching
 
-    def update(i):
-        if trail and i > 0:
-            previous = q_history[i-1::-1,:,:]
-            weights = 2 ** np.arange(-1, -i-1, -1, dtype = np.float32)
-            history = np.tensordot(previous, weights, axes = (0, 0))
-            mat.set_data(np.maximum(q_history[i,:,:], history).T)
-        else:
-            mat.set_data(q_history[i,:,:].T)
-        line.set_segments(error_layout(error_history[i,:,:,:], dual = dual).get_segments())
-        return (mat, line)
-    
-    return animation.FuncAnimation(fig = fig, func = update, frames = q_history.shape[0], interval = 250)
+    x_errors = error[:,:,0]
+    y_errors = error[:,:,1]
+
+    x_parity = x_errors.sum(axis = 0) % 2
+    y_parity = y_errors.sum(axis = 1) % 2
+
+    return x_parity.any() or y_parity.any()
 
 def decoder_2D(state: State, T: int, c: int, η: float, history: bool) -> Union[None, tuple[np.ndarray, np.ndarray]]:
     """
@@ -223,21 +170,81 @@ def decoder_2D(state: State, T: int, c: int, η: float, history: bool) -> Union[
     if history:
         return np.array(q_history), np.array(error_history)
 
-def logical_error(error: np.ndarray) -> bool:
+def error_layout(error: np.ndarray, dual: bool = True) -> LineCollection:
     """
-    Checks if the error configuration corresponds to a logical error.
+    Helper function for plotting errors along gridlines.
 
     Parameters:
-    error (np.ndarray): L x L x 2 array representing the error configuration.
+    error (np.ndarray): L x L x 2 array representing the error configuration, ∈ ℤ/2ℤ.
+    dual (bool): Whether to plot the errors on the dual lattice.
 
     Returns:
-    bool: Whether there is a logical error.
+    LineCollection: A collection of line segments representing the errors.
     """
 
-    x_errors = error[:,:,0]
-    y_errors = error[:,:,1]
+    L = error.shape[0]
+    errors = np.argwhere(error).astype(np.float32)
+    x_errors = errors[errors[:,2] == 0][:,:-1]
+    y_errors = errors[errors[:,2] == 1][:,:-1]
 
-    x_parity = x_errors.sum(axis = 0) % 2
-    y_parity = y_errors.sum(axis = 1) % 2
+    x_boundaries = x_errors[x_errors[:,1] == 0]
+    x_boundaries[:,1] += L
+    x_errors = np.concatenate([x_errors, x_boundaries], axis = 0)
 
-    return x_parity.any() or y_parity.any()
+    y_boundaries = y_errors[y_errors[:,0] == 0]
+    y_boundaries[:,0] += L
+    y_errors = np.concatenate([y_errors, y_boundaries], axis = 0)
+
+    if dual:
+        x_up = x_errors
+        x_down = x_errors.copy()
+        x_down[:,1] -= 1
+        x_lines = np.stack([x_up, x_down], axis = 1)
+
+        y_left = y_errors
+        y_right = y_errors.copy()
+        y_left[:,0] -= 1
+        y_lines = np.stack([y_left, y_right], axis = 1)
+    else:
+        x_left = x_errors - 0.5
+        x_right = x_left.copy()
+        x_right[:,0] += 1
+        x_lines = np.stack([x_left, x_right], axis = 1)
+
+        y_up = y_errors - 0.5
+        y_down = y_up.copy()
+        y_up[:,1] += 1
+        y_lines = np.stack([y_up, y_down], axis = 1)
+    
+    lines = np.concatenate([x_lines, y_lines], axis = 0)
+
+    return LineCollection(lines, colors = 'r')
+
+def plot_evolution(q_history: np.ndarray, error_history: np.ndarray, dual: bool = True) -> animation.FuncAnimation:
+    """
+    Plot the evolution of the anyon position history.
+
+    Parameters:
+    q_history (np.ndarray): T x L x L array representing the anyon position history.
+    error_history (np.ndarray): T x L x L x 2 array representing the error history.
+    dual (bool): Whether to display the errors on the dual lattice.
+
+    Returns:
+    animation.FuncAnimation: Animation of the anyon evolution.
+    """
+
+    fig, ax = plt.subplots()
+    mat = ax.matshow(q_history[0,:,:].T, origin = 'lower', cmap = mako)
+    ax.set_xlabel('x')
+    ax.set_ylabel('y')
+    ax.set_title('Anyon and error evolution')
+    ax.xaxis.tick_bottom()
+    line = error_layout(error_history[0,:,:,:], dual = dual)
+    ax.add_collection(line)
+
+    def update(i):
+        mat.set_data(q_history[i,:,:].T)
+        line.set_segments(error_layout(error_history[i,:,:,:], dual = dual).get_segments())
+        return (mat, line)
+    
+    return animation.FuncAnimation(fig = fig, func = update, frames = q_history.shape[0], interval = 250)
