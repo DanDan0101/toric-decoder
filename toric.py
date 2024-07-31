@@ -1,5 +1,7 @@
 import numpy as np
+from scipy.sparse import csc_matrix
 from scipy.ndimage import laplace
+from pymatching import Matching
 
 import seaborn as sns
 mako = sns.color_palette("mako", as_cmap=True)
@@ -117,19 +119,65 @@ def init_state(L: int, p_error: float) -> State:
     N = np.sum(q)
     return State(L, N, q, np.stack([x_errors, y_errors], axis = 2))
 
-def logical_error(error: np.ndarray, mwpm: bool = True) -> bool:
+def pcm(L: int) -> csc_matrix:
+    """
+    Create a parity-check matrix for the 2D toric code. The rows correspond to plaquettes, 
+    and the columns correspond to x bonds and y bonds.
+
+    Parameters:
+    L (int): The lattice size.
+
+    Returns:
+    csc_matrix: L^2 x 2L^2 sparse array with 4L^2 entries, ∈ ℤ/2ℤ.
+    """
+
+    row_ind = np.arange(L**2)
+
+    # x bonds, -y
+    col_ind_1 = row_ind.copy()
+
+    # x bonds, +y
+    col_ind_2 = (row_ind + 1) % L + row_ind - row_ind % L
+
+    # y bonds, -x
+    col_ind_3 = row_ind + L**2
+
+    # y bonds, +x
+    col_ind_4 = (row_ind + L) % L**2 + L**2
+
+    row_ind = np.tile(row_ind, 4)
+    col_ind = np.concatenate([col_ind_1, col_ind_2, col_ind_3, col_ind_4])
+    data = np.ones(4 * L**2, dtype = np.uint8)
+    return csc_matrix((data, (row_ind, col_ind)), shape = (L**2, 2 * L**2))
+
+def mwpm(matching: Matching, q: np.ndarray) -> np.ndarray:
+    """
+    Computes the minimum-weight perfect-matching correction for a given anyon state.
+
+    Parameters:
+    matching (Matching): The matching object corresponding to the toric lattice.
+    q (np.ndarray): L x L array representing the anyon field, ∈ ℤ/2ℤ.
+
+    Returns:
+    np.ndarray: L x L x 2 array representing the correction, ∈ ℤ/2ℤ.
+    """
+
+    L = q.shape[0]
+    correction = matching.decode(q.flatten())
+    x_correction = correction[:L**2].reshape(L,L)
+    y_correction = correction[L**2:].reshape(L,L)
+    return np.stack([x_correction, y_correction], axis = 2)
+
+def logical_error(error: np.ndarray) -> bool:
     """
     Checks if the error configuration corresponds to a logical error.
 
     Parameters:
     error (np.ndarray): L x L x 2 array representing the error configuration, ∈ ℤ/2ℤ.
-    mwpm (bool): Whether to use minimum-weight perfect-matching to eliminate remaining anyons.
 
     Returns:
     bool: Whether there is a logical error.
     """
-
-    # TODO: Implement minimum-weight perfect-matching
 
     x_errors = error[:,:,0]
     y_errors = error[:,:,1]
