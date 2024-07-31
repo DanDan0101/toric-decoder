@@ -11,6 +11,5 @@ We assume that only $X$ errors may occur, independently Bernoulli distributed on
 * `matplotlib`
 * `seaborn`
 * `tqdm`
-* `networkx`
 * `pymatching`
 * `multiprocess`

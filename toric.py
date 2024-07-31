@@ -17,9 +17,9 @@ class State:
     """
     L (int): lattice size
     N (int): number of anyons
-    q (np.ndarray): L x L array representing the anyon field, ∈ ℤ/2ℤ
-    error (np.ndarray): L x L x 2 array representing the error configuration, ∈ ℤ/2ℤ
-    Φ (np.ndarray): L x L array representing the field, ∈ ℝ
+    q (np.ndarray): L x L array representing the anyon field, ∈ ℤ/2ℤ.
+    error (np.ndarray): L x L x 2 array representing the error configuration, ∈ ℤ/2ℤ.
+    Φ (np.ndarray): L x L array representing the field, ∈ ℝ.
     """
 
     def __init__(self, L: int, N: int, q: np.ndarray, error: np.ndarray):
@@ -107,10 +107,10 @@ def init_state(L: int, p_error: float) -> State:
     State: The initialized state object, with zero field.
     """
 
-    y_errors = (np.random.rand(L, L) < p_error).astype(np.int32)
+    y_errors = (np.random.rand(L, L) < p_error).astype(np.uint8)
     vert_anyons = y_errors ^ np.roll(y_errors, -1, axis=0)
 
-    x_errors = (np.random.rand(L, L) < p_error).astype(np.int32)
+    x_errors = (np.random.rand(L, L) < p_error).astype(np.uint8)
     horiz_anyons = x_errors ^ np.roll(x_errors, -1, axis=1)
     
     q = vert_anyons ^ horiz_anyons
@@ -122,7 +122,7 @@ def logical_error(error: np.ndarray, mwpm: bool = True) -> bool:
     Checks if the error configuration corresponds to a logical error.
 
     Parameters:
-    error (np.ndarray): L x L x 2 array representing the error configuration.
+    error (np.ndarray): L x L x 2 array representing the error configuration, ∈ ℤ/2ℤ.
     mwpm (bool): Whether to use minimum-weight perfect-matching to eliminate remaining anyons.
 
     Returns:
@@ -151,8 +151,8 @@ def decoder_2D(state: State, T: int, c: int, η: float, history: bool) -> Union[
     history (bool): Whether to return the history of anyon positions and errors.
 
     Returns:
-    np.ndarray: T x L x L array representing the anyon position history.
-    np.ndarray: T x L x L x 2 array representing the error history.
+    np.ndarray: T x L x L array representing the anyon position history, ∈ ℤ/2ℤ.
+    np.ndarray: T x L x L x 2 array representing the error history, ∈ ℤ/2ℤ.
     """
 
     q_history = []
@@ -187,6 +187,7 @@ def error_layout(error: np.ndarray, dual: bool = True) -> LineCollection:
     x_errors = errors[errors[:,2] == 0][:,:-1]
     y_errors = errors[errors[:,2] == 1][:,:-1]
 
+    # Wrapping for errors on boundaries
     x_boundaries = x_errors[x_errors[:,1] == 0]
     x_boundaries[:,1] += L
     x_errors = np.concatenate([x_errors, x_boundaries], axis = 0)
@@ -225,8 +226,8 @@ def plot_evolution(q_history: np.ndarray, error_history: np.ndarray, dual: bool 
     Plot the evolution of the anyon position history.
 
     Parameters:
-    q_history (np.ndarray): T x L x L array representing the anyon position history.
-    error_history (np.ndarray): T x L x L x 2 array representing the error history.
+    q_history (np.ndarray): T x L x L array representing the anyon position history, ∈ ℤ/2ℤ.
+    error_history (np.ndarray): T x L x L x 2 array representing the error history, ∈ ℤ/2ℤ.
     dual (bool): Whether to display the errors on the dual lattice.
 
     Returns:
@@ -247,4 +248,4 @@ def plot_evolution(q_history: np.ndarray, error_history: np.ndarray, dual: bool 
         line.set_segments(error_layout(error_history[i,:,:,:], dual = dual).get_segments())
         return (mat, line)
     
-    return animation.FuncAnimation(fig = fig, func = update, frames = q_history.shape[0], interval = 250)
+    return animation.FuncAnimation(fig = fig, func = update, frames = q_history.shape[0], interval = 250, repeat = False)
