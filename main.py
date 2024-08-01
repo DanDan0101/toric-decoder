@@ -21,10 +21,10 @@ n = args.n
 
 L = 20 * (1 + n // 5)
 p_error = 0.05
-η = 0.1
+eta = 0.1
 c = 2 ** (1 + n % 5)
 T = L
-shots = 10
+shots = 10000
 
 matching = Matching(pcm(L))
 
@@ -33,7 +33,7 @@ def f(n):
     initial_correction = mwpm(matching, mystate.q)
     mwpm_fail = logical_error(initial_correction ^ mystate.error)
 
-    decoder_2D(mystate, T, c, η, p_error = 0, history = False)
+    decoder_2D(mystate, T, c, eta, p_error = 0, history = False)
     ca_fail = (mystate.N > 0 or logical_error(mystate.error))
 
     correction = mwpm(matching, mystate.q)
@@ -44,4 +44,4 @@ with Pool(num_cpus) as p:
     result = p.map(f, range(shots))
 
 fail_array = np.sum(result, axis = 0) / shots # mwpm_fail, ca_fail, ca_mwpm_fail
-np.save(f'data/fail_array_{L}_{c}.npy', fail_array)
+np.save(f"data/fail_array_{L}_{c}.npy", fail_array)
