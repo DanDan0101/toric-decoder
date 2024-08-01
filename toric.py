@@ -51,6 +51,26 @@ class State:
             ax.add_collection(error_layout(self.error, dual = True))
         return ax
     
+    def add_errors(self, p_error: float) -> None:
+        """
+        Adds errors to the current state.
+
+        Parameters:
+        p_error (float): The probability of an X error occuring per spin.
+
+        Returns:
+        None
+        """
+        y_errors = (np.random.rand(self.L, self.L) < p_error).astype(np.uint8)
+        vert_anyons = y_errors ^ np.roll(y_errors, -1, axis=0)
+
+        x_errors = (np.random.rand(self.L, self.L) < p_error).astype(np.uint8)
+        horiz_anyons = x_errors ^ np.roll(x_errors, -1, axis=1)
+        
+        self.q ^= vert_anyons ^ horiz_anyons
+        self.N = np.sum(self.q)
+        self.error ^= np.stack([x_errors, y_errors], axis = 2)
+
     def update_field(self, η: float) -> None:
         """
         Update the field state.
@@ -99,7 +119,7 @@ class State:
 
 def init_state(L: int, p_error: float) -> State:
     """
-    Initializes a state with a random distribution of anyons.
+    Initializes an empty state.
 
     Parameters:
     L (int): The size of the lattice.
@@ -108,16 +128,9 @@ def init_state(L: int, p_error: float) -> State:
     Returns:
     State: The initialized state object, with zero field.
     """
-
-    y_errors = (np.random.rand(L, L) < p_error).astype(np.uint8)
-    vert_anyons = y_errors ^ np.roll(y_errors, -1, axis=0)
-
-    x_errors = (np.random.rand(L, L) < p_error).astype(np.uint8)
-    horiz_anyons = x_errors ^ np.roll(x_errors, -1, axis=1)
-    
-    q = vert_anyons ^ horiz_anyons
-    N = np.sum(q)
-    return State(L, N, q, np.stack([x_errors, y_errors], axis = 2))
+    mystate = State(L, 0, np.zeros((L, L), dtype = np.uint8), np.zeros((L, L, 2), dtype = np.uint8))
+    mystate.add_errors(p_error)
+    return mystate
 
 def pcm(L: int) -> csc_matrix:
     """
@@ -187,7 +200,7 @@ def logical_error(error: np.ndarray) -> bool:
 
     return x_parity.any() or y_parity.any()
 
-def decoder_2D(state: State, T: int, c: int, η: float, history: bool) -> Union[None, tuple[np.ndarray, np.ndarray]]:
+def decoder_2D(state: State, T: int, c: int, η: float, p_error: float, history: bool) -> Union[None, tuple[np.ndarray, np.ndarray]]:
     """
     Run a 2D decoder on a state for T epochs.
 
@@ -196,6 +209,7 @@ def decoder_2D(state: State, T: int, c: int, η: float, history: bool) -> Union[
     T (int): Number of epochs to run.
     c (int): Field velocity.
     η (float): Smoothing parameter.
+    p_error (float): Probability of an X error occuring per spin, per time step.
     history (bool): Whether to return the history of anyon positions and errors.
 
     Returns:
@@ -209,7 +223,8 @@ def decoder_2D(state: State, T: int, c: int, η: float, history: bool) -> Union[
         for _ in range(c):
             state.update_field(η)
         state.update_anyon()
-        # Add some errors
+        if p_error > 0:
+            state.add_errors(p_error)
         if history:
             q_history.append(state.q.copy())
             error_history.append(state.error.copy())
