@@ -19,10 +19,10 @@ parser.add_argument('-n', type = int, default = 0)
 args = parser.parse_args()
 n = args.n
 
-L = 20 * (1 + n // 5)
+L = 20 * (1 + n // 6)
 p_error = 0.05
 eta = 0.1
-c = 2 ** (1 + n % 5)
+c = 2 ** (1 + n % 6)
 T = L
 shots = 10000
 
@@ -30,18 +30,15 @@ matching = Matching(pcm(L))
 
 def f(n):
     mystate = init_state(L, p_error)
-    initial_correction = mwpm(matching, mystate.q)
-    mwpm_fail = logical_error(initial_correction ^ mystate.error)
 
-    decoder_2D(mystate, T, c, eta, p_error = 0, history = False)
-    ca_fail = (mystate.N > 0 or logical_error(mystate.error))
+    decoder_2D(mystate, T, c, eta, p_error = p_error, history = False)
 
     correction = mwpm(matching, mystate.q)
     ca_mwpm_fail = logical_error(correction ^ mystate.error)
-    return mwpm_fail, ca_fail, ca_mwpm_fail
+    return ca_mwpm_fail, mystate.N / L ** 2
 
 with Pool(num_cpus) as p:
     result = p.map(f, range(shots))
 
-fail_array = np.sum(result, axis = 0) / shots # mwpm_fail, ca_fail, ca_mwpm_fail
-np.save(f"data/fail_array_{L}_{c}.npy", fail_array)
+fail_array = np.mean(result, axis = 0)
+np.save(f"data/fail_noisy_{L}_{c}.npy", fail_array)
