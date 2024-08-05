@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 #SBATCH --job-name=main
-#SBATCH --time=1:00:00
+#SBATCH --time=4:00:00
 #SBATCH -p hns
 #SBATCH --array=0-59
 #SBATCH -c 8
