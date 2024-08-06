@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 #SBATCH --job-name=main
 #SBATCH --time=4:00:00
-#SBATCH -p hns
+#SBATCH -p owners
 #SBATCH --array=0-59
 #SBATCH -c 8
 #SBATCH --mail-type=ALL
