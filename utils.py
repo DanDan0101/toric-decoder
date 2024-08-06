@@ -1,7 +1,7 @@
 import numpy as np
-from numba import njit
+from numba import jit
 
-@njit
+@jit
 def roll_1d(a: np.ndarray, shift: int) -> np.ndarray:
     """
     Implementation of np.roll for 1D arrays.
@@ -23,7 +23,7 @@ def roll_1d(a: np.ndarray, shift: int) -> np.ndarray:
     
     return b
 
-@njit
+@jit
 def roll_2d(a: np.ndarray, shift: tuple[int, int]) -> np.ndarray:
     """
     Implementation of np.roll for 2D arrays.
@@ -54,7 +54,7 @@ def roll_2d(a: np.ndarray, shift: tuple[int, int]) -> np.ndarray:
 
     return b
 
-@njit
+@jit
 def laplace_2d(a: np.ndarray) -> np.ndarray:
     """
     Implementation of scipy.ndimage.laplace for 2D arrays,
@@ -75,7 +75,7 @@ def laplace_2d(a: np.ndarray) -> np.ndarray:
 
     return b
 
-@njit
+@jit
 def window(L: int) -> np.ndarray:
     """
     Returns a list of indices for a 3x3 window on a 2D lattice with size L.
