@@ -1,6 +1,7 @@
 import numpy as np
+from utils import *
+
 from scipy.sparse import csc_matrix
-from scipy.ndimage import laplace
 from pymatching import Matching
 
 import seaborn as sns
@@ -11,10 +12,18 @@ from matplotlib.collections import LineCollection
 from matplotlib.axes import Axes
 import matplotlib.animation as animation
 
-from typing import Union
+from numba import uint8, int32, float32, njit
+from numba.experimental import jitclass
 
-WINDOW = np.array([-1, 0, 1])
+spec = [
+    ('L', int32),
+    ('N', int32),
+    ('q', uint8[:,:]),
+    ('error', uint8[:,:,:]),
+    ('Φ', float32[:,:]),
+]
 
+@jitclass(spec)
 class State:
     """
     L (int): lattice size
@@ -62,14 +71,14 @@ class State:
         None
         """
         y_errors = (np.random.rand(self.L, self.L) < p_error).astype(np.uint8)
-        vert_anyons = y_errors ^ np.roll(y_errors, -1, axis=0)
+        vert_anyons = y_errors ^ roll_2d(y_errors, (-1, 0))
 
         x_errors = (np.random.rand(self.L, self.L) < p_error).astype(np.uint8)
-        horiz_anyons = x_errors ^ np.roll(x_errors, -1, axis=1)
+        horiz_anyons = x_errors ^ roll_2d(x_errors, (0, -1))
         
         self.q ^= vert_anyons ^ horiz_anyons
         self.N = np.sum(self.q)
-        self.error ^= np.stack([x_errors, y_errors], axis = 2)
+        self.error ^= np.dstack((x_errors, y_errors))
 
     def update_field(self, η: float) -> None:
         """
@@ -82,7 +91,7 @@ class State:
         None
         """
 
-        self.Φ += η / 4 * laplace(self.Φ, mode='wrap')
+        self.Φ += η / 4 * laplace_2d(self.Φ)
         self.Φ += self.q
     
     def update_anyon(self) -> None:
@@ -94,9 +103,10 @@ class State:
         """
 
         for x, y in np.argwhere(self.q):
-            idx = x * self.L + y
-            shifts = np.add.outer(WINDOW * self.L, WINDOW).flatten()
-            neighborhood = self.Φ.take(shifts + idx, mode = 'wrap')
+            base = x * self.L + y
+            idx = window(self.L) + base
+            idx %= self.L ** 2
+            neighborhood = self.Φ.take(idx)
             neighborhood = neighborhood[1::2]
             direction = neighborhood.argmax()
             if np.random.rand() < 0.5:
@@ -117,6 +127,7 @@ class State:
                     raise ValueError("Invalid direction")
         self.N = np.sum(self.q)
 
+@njit
 def init_state(L: int, p_error: float) -> State:
     """
     Initializes an empty state.
@@ -179,8 +190,9 @@ def mwpm(matching: Matching, q: np.ndarray) -> np.ndarray:
     correction = matching.decode(q.flatten())
     x_correction = correction[:L**2].reshape(L,L)
     y_correction = correction[L**2:].reshape(L,L)
-    return np.stack([x_correction, y_correction], axis = 2)
+    return np.dstack((x_correction, y_correction))
 
+@njit
 def logical_error(error: np.ndarray) -> bool:
     """
     Checks if the error configuration corresponds to a logical error.
@@ -200,7 +212,8 @@ def logical_error(error: np.ndarray) -> bool:
 
     return x_parity.any() or y_parity.any()
 
-def decoder_2D(state: State, T: int, c: int, η: float, p_error: float, history: bool) -> Union[None, tuple[np.ndarray, np.ndarray]]:
+@njit
+def decoder_2D(state: State, T: int, c: int, η: float, p_error: float) -> None:
     """
     Run a 2D decoder on a state for T epochs.
 
@@ -210,7 +223,30 @@ def decoder_2D(state: State, T: int, c: int, η: float, p_error: float, history:
     c (int): Field velocity.
     η (float): Smoothing parameter.
     p_error (float): Probability of an X error occuring per spin, per time step.
-    history (bool): Whether to return the history of anyon positions and errors.
+
+    Returns:
+    None
+    """
+
+    for _ in range(T):
+        if p_error > 0:
+            state.add_errors(p_error)
+        for _ in range(c):
+            state.update_field(η)
+        state.update_anyon()
+        if state.N == 0 and p_error == 0:
+            break
+
+def decoder_2D_history(state: State, T: int, c: int, η: float, p_error: float) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Run a 2D decoder on a state for T epochs, keeping track of the anyon and error history.
+
+    Parameters:
+    state (State): The state to decode.
+    T (int): Number of epochs to run.
+    c (int): Field velocity.
+    η (float): Smoothing parameter.
+    p_error (float): Probability of an X error occuring per spin, per time step.
 
     Returns:
     np.ndarray: T x L x L array representing the anyon position history, ∈ ℤ/2ℤ.
@@ -220,18 +256,16 @@ def decoder_2D(state: State, T: int, c: int, η: float, p_error: float, history:
     q_history = []
     error_history = []
     for _ in range(T):
+        if p_error > 0:
+            state.add_errors(p_error)
         for _ in range(c):
             state.update_field(η)
         state.update_anyon()
-        if p_error > 0:
-            state.add_errors(p_error)
-        if history:
-            q_history.append(state.q.copy())
-            error_history.append(state.error.copy())
-        if state.N == 0:
+        q_history.append(state.q.copy())
+        error_history.append(state.error.copy())
+        if state.N == 0 and p_error == 0:
             break
-    if history:
-        return np.array(q_history), np.array(error_history)
+    return np.array(q_history), np.array(error_history)
 
 def error_layout(error: np.ndarray, dual: bool = True) -> LineCollection:
     """

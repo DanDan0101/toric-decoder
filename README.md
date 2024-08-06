@@ -7,7 +7,7 @@ We assume that only $X$ errors may occur, independently Bernoulli distributed on
 ## Dependencies
 
 * `numpy`
-* `scipy`
+* `numba`
 * `matplotlib`
 * `seaborn`
 * `tqdm`
