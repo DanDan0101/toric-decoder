@@ -128,7 +128,7 @@ class State:
                     raise ValueError("Invalid direction")
         self.N = np.sum(self.q)
 
-@jit
+@jit(cache = True)
 def init_state(L: int, p_error: float) -> State:
     """
     Initializes an empty state.
@@ -193,7 +193,7 @@ def mwpm(matching: Matching, q: np.ndarray) -> np.ndarray:
     y_correction = correction[L**2:].reshape(L,L)
     return np.dstack((x_correction, y_correction))
 
-@jit
+@jit(cache = True)
 def logical_error(error: np.ndarray) -> bool:
     """
     Checks if the error configuration corresponds to a logical error.
@@ -213,7 +213,7 @@ def logical_error(error: np.ndarray) -> bool:
 
     return x_parity.any() or y_parity.any()
 
-@jit
+@jit(cache = True)
 def decoder_2D(state: State, T: int, c: int, η: float, p_error: float) -> None:
     """
     Run a 2D decoder on a state for T epochs.
