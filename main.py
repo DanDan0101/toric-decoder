@@ -1,3 +1,6 @@
+from time import time, strftime, gmtime
+t0 = time()
+
 import sys
 sys.path.insert(0, 'toric-decoder')
 
@@ -12,8 +15,8 @@ num_cpus = len(os.sched_getaffinity(0))
 # Parse command line arguments
 import argparse
 parser = argparse.ArgumentParser(
-    description = 'Run the ???.',
-    epilog = 'Saves ??? to the current directory.'
+    description = 'Run the simulation.',
+    epilog = 'Saves data to the ./data/ directory.'
 )
 parser.add_argument('-n', type = int, default = 0)
 args = parser.parse_args()
@@ -31,7 +34,7 @@ matching = Matching(pcm(L))
 def f(n):
     mystate = init_state(L)
 
-    decoder_2D(mystate, T, c, eta, p_error = p_error, history = False)
+    decoder_2D(mystate, T, c, eta, p_error = p_error)
 
     correction = mwpm(matching, mystate.q)
     ca_mwpm_fail = logical_error(correction ^ mystate.error)
@@ -41,4 +44,8 @@ with Pool(num_cpus) as p:
     result = p.map(f, range(shots))
 
 fail_array = np.mean(result, axis = 0)
-np.save(f"data/run_3_{L}_{p_error}.npy", fail_array)
+np.save(f"data/run_3/run_3_{L}_{p_error}.npy", fail_array)
+
+elapsed = time() - t0
+print(f"Job for L={L} and p={p_error} took time:")
+print(strftime("%H:%M:%S", gmtime(elapsed)))
