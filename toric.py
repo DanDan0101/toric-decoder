@@ -128,20 +128,18 @@ class State:
                     raise ValueError("Invalid direction")
         self.N = np.sum(self.q)
 
-@jit(cache = True)
-def init_state(L: int, p_error: float) -> State:
+@jit
+def init_state(L: int) -> State:
     """
     Initializes an empty state.
 
     Parameters:
     L (int): The size of the lattice.
-    p_error (float): The probability of an X error occuring per spin.
 
     Returns:
     State: The initialized state object, with zero field.
     """
     mystate = State(L, 0, np.zeros((L, L), dtype = np.uint8), np.zeros((L, L, 2), dtype = np.uint8))
-    mystate.add_errors(p_error)
     return mystate
 
 def pcm(L: int) -> csc_matrix:
@@ -193,7 +191,7 @@ def mwpm(matching: Matching, q: np.ndarray) -> np.ndarray:
     y_correction = correction[L**2:].reshape(L,L)
     return np.dstack((x_correction, y_correction))
 
-@jit(cache = True)
+@jit
 def logical_error(error: np.ndarray) -> bool:
     """
     Checks if the error configuration corresponds to a logical error.
@@ -213,7 +211,7 @@ def logical_error(error: np.ndarray) -> bool:
 
     return x_parity.any() or y_parity.any()
 
-@jit(cache = True)
+@jit
 def decoder_2D(state: State, T: int, c: int, η: float, p_error: float) -> None:
     """
     Run a 2D decoder on a state for T epochs.
