@@ -236,6 +236,35 @@ def decoder_2D(state: State, T: int, c: int, η: float, p_error: float) -> None:
         if state.N == 0 and p_error == 0:
             break
 
+@jit
+def decoder_2D_density(state: State, T: int, c: int, η: float, p_error: float) -> np.ndarray:
+    """
+    Run a 2D decoder on a state for T epochs.
+
+    Parameters:
+    state (State): The state to decode.
+    T (int): Number of epochs to run.
+    c (int): Field velocity.
+    η (float): Smoothing parameter.
+    p_error (float): Probability of an X error occuring per spin, per time step.
+
+    Returns:
+    np.ndarray: Array of length T containing the density of anyons at each time step.
+    """
+
+    density = np.zeros(T, dtype = np.float32)
+
+    for i in range(T):
+        if p_error > 0:
+            state.add_errors(p_error)
+        for _ in range(c):
+            state.update_field(η)
+        state.update_anyon()
+        density[i] = state.N / state.L ** 2
+        if state.N == 0 and p_error == 0:
+            break
+    return density
+
 def decoder_2D_history(state: State, T: int, c: int, η: float, p_error: float) -> tuple[np.ndarray, np.ndarray]:
     """
     Run a 2D decoder on a state for T epochs, keeping track of the anyon and error history.
