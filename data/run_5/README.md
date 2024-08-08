@@ -17,10 +17,15 @@ Contains a singular float of the final anyon density.
 
 ## Runtimes (min)
 
-| $L$ | Low | High |
-| --- | --- | ---- |
-| 20  | 1:11 | 2:03 |
-| 40  | 1:39 | 2:31 |
-| 60  | 2:34 | 5:18 |
-| 80  | 5:54 | 8:22 |
-| 100 | 7:40 | 26:54|
+| $1/p\setminus L$ | 100      | 200      | 300      | 400      | 500      |
+| ---------------- | -------- | -------- | -------- | -------- | -------- |
+| 1024             | 00:07:53 | 01:37:42 | TIMEOUT  | TIMEOUT  | TIMEOUT  |
+| 512              | 00:14:40 | 02:07:17 | TIMEOUT  | TIMEOUT  | TIMEOUT  |
+| 256              | 00:17:23 | 02:20:07 | TIMEOUT  | TIMEOUT  | TIMEOUT  |
+| 128              | 00:21:43 | 04:00:22 | TIMEOUT  | TIMEOUT  | TIMEOUT  |
+| 64               | 00:29:44 | TIMEOUT  | TIMEOUT  | TIMEOUT  | TIMEOUT  |
+| 32               | 00:41:22 | TIMEOUT  | TIMEOUT  | TIMEOUT  | TIMEOUT  |
+| 16               | 00:47:57 | TIMEOUT  | TIMEOUT  | TIMEOUT  | TIMEOUT  |
+| 8                | 00:58:28 | TIMEOUT  | TIMEOUT  | TIMEOUT  | TIMEOUT  |
+| 4                | 00:45:16 | TIMEOUT  | TIMEOUT  | TIMEOUT  | TIMEOUT  |
+| 2                | 00:40:33 | TIMEOUT  | TIMEOUT  | TIMEOUT  | TIMEOUT  |
