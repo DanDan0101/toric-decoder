@@ -22,31 +22,31 @@ parser.add_argument('-n', type = int, default = 0)
 args = parser.parse_args()
 n = args.n
 
-L = 100 * (1 + n // 10) # 100, 200, 300, ..., 500
+L = 20 * (1 + n // 10) # 20, 40, 60, ..., 100
 p_error = (1 + n % 10) # 1, 2, 3, ..., 10
 η = 0.1
 c = 16
 T = L
-shots = 10000
+shots = 100000
 
-# matching = Matching(pcm(L))
+matching = Matching(pcm(L))
 
 def f(*_):
     mystate = init_state(L)
 
-    decoder_2D(mystate, T, c, η, 0.5 ** p_error)
+    density = decoder_2D_density(mystate, T, c, η, 0.001 * p_error)
 
-    # correction = mwpm(matching, mystate.q)
-    # ca_mwpm_fail = logical_error(correction ^ mystate.error)
-    return mystate.N / L**2
+    correction = mwpm(matching, mystate.q)
+    ca_mwpm_fail = logical_error(correction ^ mystate.error)
+    return ca_mwpm_fail, density
 
 with Pool(num_cpus) as p:
     result = p.map(f, range(shots))
 
-density = np.mean(result)
+result_array = np.array(result, dtype = object).mean(axis = 0)
 
-np.save(f"data/run_5/run_5_{L}_{p_error}.npy", density)
+np.save(f"data/run_6/run_6_{L}_{p_error}.npy", result_array)
 
 elapsed = time() - t0
-print(f"Job for L={L} and p=1/{int(2**p_error)} took time:")
+print(f"Job for L={L} and p=1/{int(0.001 * p_error)} took time:")
 print(strftime("%H:%M:%S", gmtime(elapsed)))
