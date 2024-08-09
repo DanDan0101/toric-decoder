@@ -48,5 +48,5 @@ result_array = np.array(result, dtype = object).mean(axis = 0)
 np.save(f"data/run_6/run_6_{L}_{p_error}.npy", result_array)
 
 elapsed = time() - t0
-print(f"Job for L={L} and p=1/{int(0.001 * p_error)} took time:")
+print(f"Job for L={L} and p={0.001 * p_error} took time:")
 print(strftime("%H:%M:%S", gmtime(elapsed)))
