@@ -87,9 +87,5 @@ def window(L: int) -> np.ndarray:
     np.ndarray: Window indices.
     """
 
-    # Disgusting hardcoding because outer sum is not supported in numba
-    interval = np.array([-1, 0, 1], dtype = np.int32)
-    window = np.repeat(interval * L, 3)
-    window[::3] -= 1
-    window[2::3] += 1
-    return window
+    # Implementation would be more elegant if numba supported np.sum.outer
+    return np.array([-L-1, -L, -L+1, -1, 0, 1, L-1, L, L+1], dtype = np.int32)
