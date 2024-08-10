@@ -20,10 +20,14 @@ parser = argparse.ArgumentParser(
 )
 parser.add_argument('-n', type = int, default = 0)
 args = parser.parse_args()
-n = args.n
+n = args.n # 0-999
 
-L = int(10 * (1 + n // 100)) # 10, 20, 30, ..., 100
-p_error = 4 # 0.004
+L = int(20 * (1 + n // 200)) # 20, 40, 60, ..., 100
+n %= 200 # 0-199
+
+p_error = 40 + int(n // 10) # 40, 41, 42, ..., 59
+n %= 10 # 0-9
+
 η = 0.1
 c = 16
 T = L
@@ -34,7 +38,7 @@ matching = Matching(pcm(L))
 def f(*_):
     mystate = init_state(L)
 
-    decoder_2D(mystate, T, c, η, p_error / 1000)
+    decoder_2D(mystate, T, c, η, p_error / 10000)
 
     correction = mwpm(matching, mystate.q)
     ca_mwpm_fail = logical_error(correction ^ mystate.error)
@@ -45,9 +49,9 @@ with Pool(num_cpus) as p:
 
 fail_rate = np.array(result).mean() # Just a single float
 
-np.save(f"data/run_8/run_8_{L}_{n % 100}.npy", fail_rate)
+np.save(f"data/run_9/run_9_{L}_{p_error}_{n}.npy", fail_rate)
 
 elapsed = time() - t0
-# print(f"Job for L={L} and p={p_error / 1000} took time:")
+# print(f"Job for L={L} and p={p_error / 10000} took time:")
 # print(strftime("%H:%M:%S", gmtime(elapsed)))
 print(int(elapsed))
