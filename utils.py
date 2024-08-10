@@ -1,6 +1,7 @@
 import numpy as np
 from numba import jit
 
+# TODO: remove this function
 @jit
 def roll_1d(a: np.ndarray, shift: int) -> np.ndarray:
     """
@@ -23,6 +24,7 @@ def roll_1d(a: np.ndarray, shift: int) -> np.ndarray:
     
     return b
 
+# TODO: update this function
 @jit
 def roll_2d(a: np.ndarray, shift: tuple[int, int]) -> np.ndarray:
     """

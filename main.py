@@ -22,7 +22,7 @@ parser.add_argument('-n', type = int, default = 0)
 args = parser.parse_args()
 n = args.n
 
-L = 20 * (1 + n // 10) # 20, 40, 60, ..., 100
+L = int(10 * (1 + n // 100)) # 10, 20, 30, ..., 100
 p_error = 4 # 0.004
 η = 0.1
 c = 16
@@ -43,10 +43,11 @@ def f(*_):
 with Pool(num_cpus) as p:
     result = p.map(f, range(shots))
 
-fail_rate = np.array(result).mean(axis = 0) # Just a single float
+fail_rate = np.array(result).mean() # Just a single float
 
-np.save(f"data/run_7/run_7_{L}_{n % 10}.npy", fail_rate)
+np.save(f"data/run_8/run_8_{L}_{n % 100}.npy", fail_rate)
 
 elapsed = time() - t0
-print(f"Job for L={L} and p={p_error / 1000} took time:")
-print(strftime("%H:%M:%S", gmtime(elapsed)))
+# print(f"Job for L={L} and p={p_error / 1000} took time:")
+# print(strftime("%H:%M:%S", gmtime(elapsed)))
+print(int(elapsed))
