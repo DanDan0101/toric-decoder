@@ -1,30 +1,6 @@
 import numpy as np
 from numba import jit
 
-# TODO: remove this function
-@jit
-def roll_1d(a: np.ndarray, shift: int) -> np.ndarray:
-    """
-    Implementation of np.roll for 1D arrays.
-    
-    Parameters:
-    a (np.ndarray): 1D array to be rolled.
-    shift (int): Shift amount.
-
-    Returns:
-    np.ndarray: Rolled 1D array.
-    """
-
-    b = np.empty_like(a)
-    shift %= a.shape[0]
-
-    if shift > 0:
-        b[:shift] = a[-shift:]
-        b[shift:] = a[:-shift]
-    
-    return b
-
-# TODO: update this function
 @jit
 def roll_2d(a: np.ndarray, shift: tuple[int, int]) -> np.ndarray:
     """
@@ -37,11 +13,11 @@ def roll_2d(a: np.ndarray, shift: tuple[int, int]) -> np.ndarray:
     Returns:
     np.ndarray: Rolled 2D array.
     """
+    assert a.ndim == 2
 
     b = np.empty_like(a)
 
-    X = a.shape[0]
-    Y = a.shape[1]
+    X, Y = a.shape
     shift_x, shift_y = shift
     shift_x %= X
     shift_y %= Y
@@ -53,6 +29,37 @@ def roll_2d(a: np.ndarray, shift: tuple[int, int]) -> np.ndarray:
     if shift_y > 0:
         b[:, :shift_y] = a[:, -shift_y:]
         b[:, shift_y:] = a[:, :-shift_y]
+
+    return b
+
+@jit
+def roll_parallel(a: np.ndarray, shift: tuple[int, int]) -> np.ndarray:
+    """
+    Implementation of roll_2d along axes 1 and 2 for a 3D array.
+
+    Parameters:
+    a (np.ndarray): 3D array to be rolled.
+    shift (tuple[int, int]): Shifts along axes 1 and 2.
+
+    Returns:
+    np.ndarray: Rolled 3D array.
+    """
+    assert a.ndim == 3
+
+    b = np.empty_like(a)
+
+    _, X, Y = a.shape
+    shift_x, shift_y = shift
+    shift_x %= X
+    shift_y %= Y
+
+    if shift_x > 0:
+        b[:, :shift_x, :] = a[:, -shift_x:, :]
+        b[:, shift_x:, :] = a[:, :-shift_x, :]
+
+    if shift_y > 0:
+        b[:, :, :shift_y] = a[:, :, -shift_y:]
+        b[:, :, shift_y:] = a[:, :, :-shift_y]
 
     return b
 
@@ -69,6 +76,7 @@ def laplace_2d(a: np.ndarray) -> np.ndarray:
     Returns:
     np.ndarray: Laplacian-filtered 2D array.
     """
+    assert a.ndim == 2
 
     b = np.zeros_like(a)
     b -= 3 * a
@@ -78,16 +86,27 @@ def laplace_2d(a: np.ndarray) -> np.ndarray:
     return b
 
 @jit
-def window(L: int) -> np.ndarray:
+def laplace_parallel(a: np.ndarray) -> np.ndarray:
     """
-    Returns a list of indices for a 3x3 window on a 2D lattice with size L.
+    Implementation of laplace_2d along axes 1 and 2 for a 3D array.
 
     Parameters:
-    L (int): Size of the lattice.
+    a (np.ndarray): 3D array to be Laplacian-filtered.
 
     Returns:
-    np.ndarray: Window indices.
+    np.ndarray: Laplacian-filtered 3D array.
     """
+    assert a.ndim == 3
 
-    # Implementation would be more elegant if numba supported np.sum.outer
-    return np.array([-L-1, -L, -L+1, -1, 0, 1, L-1, L, L+1], dtype = np.int32)
+    b = np.zeros_like(a)
+    b -= 3 * a
+    b += roll_parallel(a, (0, 1)) / 2
+    b += roll_parallel(a, (0, -1)) / 2
+    b += roll_parallel(a, (1, 0)) / 2
+    b += roll_parallel(a, (-1, 0)) / 2
+    b += roll_parallel(a, (1, 1)) / 4
+    b += roll_parallel(a, (-1, -1)) / 4
+    b += roll_parallel(a, (1, -1)) / 4
+    b += roll_parallel(a, (-1, 1)) / 4
+
+    return b

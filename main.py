@@ -1,4 +1,5 @@
-from time import time, strftime, gmtime
+from time import time
+# from time import strftime, gmtime
 t0 = time()
 
 import sys
@@ -36,13 +37,13 @@ shots = 100000
 matching = Matching(pcm(L))
 
 def f(*_):
-    mystate = init_state(L)
+    mystate = State(L)
 
     decoder_2D(mystate, T, c, η, p_error / 10000)
 
-    correction = mwpm(matching, mystate.q)
-    ca_mwpm_fail = logical_error(correction ^ mystate.error)
-    return ca_mwpm_fail
+    x_correction, y_correction = mwpm(matching, mystate.q)
+    fail = logical_error(x_correction ^ mystate.x_error, y_correction ^ mystate.y_error)
+    return fail
 
 with Pool(num_cpus) as p:
     result = p.map(f, range(shots))
