@@ -19,9 +19,9 @@ parser.add_argument('-n', type = int, default = 0)
 args = parser.parse_args()
 n = args.n # TODO
 
-N = 20000
+N = 7500
 L = 100
-p_error = 0.004
+p_error = 0.005
 η = 0.1
 c = 16
 T = L
