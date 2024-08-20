@@ -1,46 +1,50 @@
 import numpy as np
-
 from scipy.sparse import csc_matrix
+
 from pymatching import Matching
 
-from numba import uint8, float32
-from numba import jit
-from numba.experimental import jitclass
+import cupy as cp
+from cupyx.scipy.ndimage import correlate1d, correlate
+OONO_PURI = cp.array([
+    [[0, 0, 0], [0, 0, 0], [0, 0, 0]],
+    [[1, 2, 1], [2, -12, 2], [1, 2, 1]],
+    [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+])
 
-from utils import roll_2d, laplace_2d
+from plotting import plot_state
+from matplotlib.axes import Axes
 
-spec = [
-    ('q', uint8[:,:]),
-    ('x_error', uint8[:,:]),
-    ('y_error', uint8[:,:]),
-    ('Φ', float32[:,:]),
-]
-@jitclass(spec)
 class State:
     """
-    q (np.ndarray): L x L array representing the anyon field, ∈ ℤ/2ℤ.
-    x_error (np.ndarray): L x L array representing the horizontal errors, ∈ ℤ/2ℤ.
-    y_error (np.ndarray): L x L array representing the vertical errors, ∈ ℤ/2ℤ.
-    Φ (np.ndarray): L x L array representing the field, ∈ ℝ.
+    q (cp.ndarray): N x L x L array representing the anyon field, ∈ ℤ/2ℤ.
+    x_error (cp.ndarray): N x L x L array representing the horizontal errors, ∈ ℤ/2ℤ.
+    y_error (cp.ndarray): N x L x L array representing the vertical errors, ∈ ℤ/2ℤ.
+    Φ (cp.ndarray): N x L x L array representing the field, ∈ ℝ.
     """
 
-    def __init__(self, L: int):
-        self.q = np.zeros((L, L), dtype = np.uint8)
-        self.x_error = np.zeros((L, L), dtype = np.uint8)
-        self.y_error = np.zeros((L, L), dtype = np.uint8)
-        self.Φ = np.zeros((L, L), dtype = np.float32)
+    def __init__(self, N: int, L: int):
+        self.q = cp.zeros((N, L, L), dtype = cp.uint8)
+        self.x_error = cp.zeros((N, L, L), dtype = cp.uint8)
+        self.y_error = cp.zeros((N, L, L), dtype = cp.uint8)
+        self.Φ = cp.zeros((N, L, L), dtype = cp.float32)
+
+    def __iter__(self):
+        return iter((self.q, self.x_error, self.y_error, self.Φ))
     
     @property
-    def L(self) -> int:
+    def N(self) -> int:
         return self.q.shape[0]
+
+    @property
+    def L(self) -> int:
+        return self.q.shape[1]
     
     @property
     def ρ(self) -> float:
-        return np.count_nonzero(self.q) / self.L ** 2
+        return cp.count_nonzero(self.q) / self.L ** 2 / self.N
     
-    @property
-    def neighborhood(self) -> np.ndarray:
-        return np.array([-self.L, -1, 1, self.L], dtype = np.int32)
+    def draw(self) -> Axes:
+        return plot_state(self)
     
     def add_errors(self, p_error: float) -> None:
         """
@@ -53,15 +57,61 @@ class State:
         None
         """
 
-        x_errors = (np.random.random((self.L, self.L)) < p_error).astype(np.uint8)
-        horiz_anyons = x_errors ^ roll_2d(x_errors, (0, -1))
+        k = cp.array([0,1,1], dtype = cp.uint8)
 
-        y_errors = (np.random.random((self.L, self.L)) < p_error).astype(np.uint8)
-        vert_anyons = y_errors ^ roll_2d(y_errors, (-1, 0))
+        x_errors = (cp.random.random((self.N, self.L, self.L)) < p_error).astype(cp.uint8)
+        horiz_anyons = correlate1d(x_errors, k, axis = 2, mode = 'wrap') % 2
+
+        y_errors = (cp.random.random((self.N, self.L, self.L)) < p_error).astype(cp.uint8)
+        vert_anyons = correlate1d(y_errors, k, axis = 1, mode = 'wrap') % 2
         
         self.q ^= vert_anyons ^ horiz_anyons
         self.x_error ^= x_errors
         self.y_error ^= y_errors
+    
+    def update_anyon(self) -> None:
+        """
+        Update the anyon state by moving to the neighbor with largest field value with probability 1/2.
+
+        Returns:
+        None
+        """
+        
+        swv = cp.lib.stride_tricks.sliding_window_view(cp.pad(self.Φ, ((0,0),(1,1),(1,1)), mode = 'wrap'), (1, 3, 3))
+        direction = swv.reshape(self.N, self.L, self.L, 9)[:,:,:,1::2].argmax(axis = 3).astype(cp.uint8) # 0, 1, 2, 3
+        direction += 1 # 1, 2, 3, 4 to allow for masking
+        direction *= ((self.q == 1) & (cp.random.random((self.N, self.L, self.L)) < 0.5))
+
+        left = (direction == 1) # -x
+        down = (direction == 2) # -y
+        up = (direction == 3) # +y
+        right = (direction == 4) # +x
+
+        self.q ^= (left | down | up | right)
+
+        # self.q ^= cp.roll(left, -1, axis = 1)
+        self.q[:,:-1,:] ^= left[:,1:,:]
+        self.q[:,-1,:] ^= left[:,0,:]
+        self.y_error ^= left
+
+        # self.q ^= cp.roll(down, -1, axis = 2)
+        self.q[:,:,:-1] ^= down[:,:,1:]
+        self.q[:,:,-1] ^= down[:,:,0]
+        self.x_error ^= down
+
+        # self.q ^= cp.roll(up, 1, axis = 2)
+        self.q[:,:,1:] ^= up[:,:,:-1]
+        self.q[:,:,0] ^= up[:,:,-1]
+        # self.x_error ^= cp.roll(up, 1, axis = 2)
+        self.x_error[:,:,1:] ^= up[:,:,:-1]
+        self.x_error[:,:,0] ^= up[:,:,-1]
+
+        # self.q ^= cp.roll(right, 1, axis = 1)
+        self.q[:,1:,:] ^= right[:,:-1,:]
+        self.q[:,0,:] ^= right[:,-1,:]
+        # self.y_error ^= cp.roll(right, 1, axis = 1)
+        self.y_error[:,1:,:] ^= right[:,:-1,:]
+        self.y_error[:,0,:] ^= right[:,-1,:]
 
     def update_field(self, η: float) -> None:
         """
@@ -74,41 +124,9 @@ class State:
         None
         """
 
-        self.Φ += η / 4 * laplace_2d(self.Φ)
+        self.Φ += η / 4 * correlate(self.Φ, OONO_PURI, mode = 'wrap')
         self.Φ += self.q
-    
-    def update_anyon(self) -> None:
-        """
-        Update the anyon state by moving to the neighbor with largest field value with probability 1/2.
 
-        Returns:
-        None
-        """
-
-        for x, y in np.argwhere(self.q):
-            base = x * self.L + y
-            idx = self.neighborhood + base
-            idx %= self.L ** 2
-            neighborhood = self.Φ.take(idx)
-            direction = neighborhood.argmax()
-            if np.random.random() < 0.5:
-                self.q[x, y] ^= 1
-                if direction == 0: # -x
-                    self.q[(x - 1) % self.L, y] ^= 1
-                    self.y_error[x, y] ^= 1
-                elif direction == 1: # -y
-                    self.q[x, (y - 1) % self.L] ^= 1
-                    self.x_error[x, y] ^= 1
-                elif direction == 2: # +y
-                    self.q[x, (y + 1) % self.L] ^= 1
-                    self.x_error[x, (y + 1) % self.L] ^= 1
-                elif direction == 3: # +x
-                    self.q[(x + 1) % self.L, y] ^= 1
-                    self.y_error[(x + 1) % self.L, y] ^= 1
-                else:
-                    raise ValueError("Invalid direction")
-
-@jit
 def decoder_2D(state: State, T: int, c: int, η: float, p_error: float) -> None:
     """
     Run a 2D decoder on a state for T epochs.
@@ -134,7 +152,6 @@ def decoder_2D(state: State, T: int, c: int, η: float, p_error: float) -> None:
         if p_error == 0 and state.ρ == 0:
             break
 
-@jit
 def decoder_2D_density(state: State, T: int, c: int, η: float, p_error: float) -> np.ndarray:
     """
     Run a 2D decoder on a state for T epochs.
@@ -147,10 +164,10 @@ def decoder_2D_density(state: State, T: int, c: int, η: float, p_error: float) 
     p_error (float): Probability of an X error occuring per spin, per time step.
 
     Returns:
-    np.ndarray: Array of length T containing the density of anyons at each time step.
+    np.ndarray: Array of length T containing the average density of anyons at each time step.
     """
 
-    density = np.empty(T, dtype = np.float32)
+    density = cp.empty(T, dtype = cp.float32)
 
     for i in range(T):
         if p_error > 0:
@@ -163,9 +180,8 @@ def decoder_2D_density(state: State, T: int, c: int, η: float, p_error: float) 
 
         if p_error == 0 and state.ρ == 0:
             break
-    return density
+    return density.get()
 
-@jit
 def decoder_2D_history(state: State, T: int, c: int, η: float, p_error: float) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Run a 2D decoder on a state for T epochs, keeping track of the anyon and error history.
@@ -178,32 +194,32 @@ def decoder_2D_history(state: State, T: int, c: int, η: float, p_error: float) 
     p_error (float): Probability of an X error occuring per spin, per time step.
 
     Returns:
-    np.ndarray: T x L x L array representing the anyon position history, ∈ ℤ/2ℤ.
-    np.ndarray: T x L x L array representing the horizontal error history, ∈ ℤ/2ℤ.
-    np.ndarray: T x L x L array representing the vertical error history, ∈ ℤ/2ℤ.
+    np.ndarray: T x N x L x L array representing the anyon position history, ∈ ℤ/2ℤ.
+    np.ndarray: T x N x L x L array representing the horizontal error history, ∈ ℤ/2ℤ.
+    np.ndarray: T x N x L x L array representing the vertical error history, ∈ ℤ/2ℤ.
     """
 
-    q_history = np.empty((2*T, state.L, state.L), dtype = np.uint8)
-    x_error_history = np.empty((2*T, state.L, state.L), dtype = np.uint8)
-    y_error_history = np.empty((2*T, state.L, state.L), dtype = np.uint8)
+    q_history = cp.empty((2*T, state.N, state.L, state.L), dtype = cp.uint8)
+    x_error_history = cp.empty((2*T, state.N, state.L, state.L), dtype = cp.uint8)
+    y_error_history = cp.empty((2*T, state.N, state.L, state.L), dtype = cp.uint8)
     for i in range(T):
         if p_error > 0:
             state.add_errors(p_error)
-        q_history[2*i,:,:] = state.q
-        x_error_history[2*i,:,:] = state.x_error
-        y_error_history[2*i,:,:] = state.y_error
+        q_history[2*i,:,:,:] = state.q
+        x_error_history[2*i,:,:,:] = state.x_error
+        y_error_history[2*i,:,:,:] = state.y_error
 
         for _ in range(c):
             state.update_field(η)
         state.update_anyon()
 
-        q_history[2*i+1,:,:] = state.q
-        x_error_history[2*i+1,:,:] = state.x_error
-        y_error_history[2*i+1,:,:] = state.y_error
+        q_history[2*i+1,:,:,:] = state.q
+        x_error_history[2*i+1,:,:,:] = state.x_error
+        y_error_history[2*i+1,:,:,:] = state.y_error
 
         if p_error == 0 and state.ρ == 0:
             break
-    return np.array(q_history), np.array(x_error_history), np.array(y_error_history)
+    return q_history.get(), x_error_history.get(), y_error_history.get()
 
 def pcm(L: int) -> csc_matrix:
     """
@@ -236,39 +252,47 @@ def pcm(L: int) -> csc_matrix:
     data = np.ones(4 * L**2, dtype = np.uint8)
     return csc_matrix((data, (row_ind, col_ind)), shape = (L**2, 2 * L**2))
 
-def mwpm(matching: Matching, q: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+def mwpm(matching: Matching, q: cp.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """
     Computes the minimum-weight perfect-matching correction for a given anyon state.
 
     Parameters:
     matching (Matching): The matching object corresponding to the toric lattice.
-    q (np.ndarray): L x L array representing the anyon field, ∈ ℤ/2ℤ.
+    q (cp.ndarray): N x L x L array representing the anyon field, ∈ ℤ/2ℤ.
 
     Returns:
-    np.ndarray: L x L array representing the horizontal correction, ∈ ℤ/2ℤ.
-    np.ndarray: L x L array representing the vertical correction, ∈ ℤ/2ℤ.
+    np.ndarray: N x L x L array representing the horizontal correction, ∈ ℤ/2ℤ.
+    np.ndarray: N x L x L array representing the vertical correction, ∈ ℤ/2ℤ.
     """
 
-    L = q.shape[0]
-    correction = matching.decode(q.flatten())
-    x_correction = correction[:L**2].reshape(L,L)
-    y_correction = correction[L**2:].reshape(L,L)
+    q_a = q.get() # Move array to CPU
+    
+    N = q_a.shape[0]
+    L = q_a.shape[1]
+
+    x_correction = np.empty((N, L, L), dtype = np.uint8)
+    y_correction = np.empty((N, L, L), dtype = np.uint8)
+
+    for n in range(N):
+        correction = matching.decode(q_a[n,:,:].ravel())
+        x_correction[n,:,:] = correction[:L**2].reshape(L,L)
+        y_correction[n,:,:] = correction[L**2:].reshape(L,L)
+
     return x_correction, y_correction
 
-@jit
-def logical_error(x_error: np.ndarray, y_error: np.ndarray) -> bool:
+def logical_error(x_error: np.ndarray, y_error: np.ndarray) -> np.ndarray:
     """
     Checks if the error configuration corresponds to a logical error.
 
     Parameters:
-    x_error (np.ndarray): L x L array representing the horizontal error configuration, ∈ ℤ/2ℤ.
-    y_error (np.ndarray): L x L array representing the vertical error configuration, ∈ ℤ/2ℤ.
+    x_error (np.ndarray): N x L x L array representing the horizontal error configuration, ∈ ℤ/2ℤ.
+    y_error (np.ndarray): N x L x L array representing the vertical error configuration, ∈ ℤ/2ℤ.
 
     Returns:
-    bool: Whether there is a logical error.
+    np.ndarray: Array of length N containing whether there is a logical error for each state, ∈ ℤ/2ℤ.
     """
 
-    x_parity = x_error.sum(axis = 0) % 2
-    y_parity = y_error.sum(axis = 1) % 2
+    x_parity = (x_error.sum(axis = 1) % 2).astype(np.uint8)
+    y_parity = (y_error.sum(axis = 2) % 2).astype(np.uint8)
 
-    return x_parity.any() or y_parity.any()
+    return np.count_nonzero(x_parity | y_parity, axis = 1) > 0

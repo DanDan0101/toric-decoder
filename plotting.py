@@ -8,6 +8,8 @@ from matplotlib.axes import Axes
 from matplotlib.collections import LineCollection
 import matplotlib.animation as animation
 
+# from toric import State
+
 def error_layout(x_error: np.ndarray, y_error:np.ndarray, dual: bool = True) -> LineCollection:
     """
     Helper function for plotting errors along gridlines.
@@ -59,41 +61,42 @@ def error_layout(x_error: np.ndarray, y_error:np.ndarray, dual: bool = True) -> 
 
     return LineCollection(lines, colors = 'r')
 
-def plot_state(q: np.ndarray, x_error: np.ndarray, y_error: np.ndarray, dual: bool = True) -> Axes:
+def plot_state(state, dual: bool = True) -> Axes:
     """
     Plots the anyons and errors of the system.
 
     Parameters:
-    q (np.ndarray): L x L array representing the anyon field, ∈ ℤ/2ℤ.
-    x_error (np.ndarray): L x L array representing the horizontal errors, ∈ ℤ/2ℤ.
-    y_error (np.ndarray): L x L array representing the vertical errors, ∈ ℤ/2ℤ.
+    state (State): The state of the system.
     dual (bool): Whether to display the errors on the dual lattice.
 
     Returns:
     Axes: The matplotlib axes object containing the plot.
     """
-
+    
     _, ax = plt.subplots()
-    ax.matshow(q.T, origin = 'lower', cmap = mako)
+    ax.matshow(state.q.T.get(), origin = 'lower', cmap = mako)
     ax.set_xlabel('x')
     ax.set_ylabel('y')
     ax.xaxis.tick_bottom()
-    ax.add_collection(error_layout(x_error, y_error, dual = dual))
+    ax.add_collection(error_layout(state.x_error.get(), state.y_error.get(), dual = dual))
     return ax
 
-def plot_evolution(q_history: np.ndarray, x_error_history: np.ndarray, y_error_history: np.ndarray, dual: bool = True) -> animation.FuncAnimation:
+def plot_evolution(history: tuple[np.ndarray, np.ndarray, np.ndarray], shot: int = 0, dual: bool = True) -> animation.FuncAnimation:
     """
     Plot the evolution of the anyon position history.
 
     Parameters:
-    q_history (np.ndarray): T x L x L array representing the anyon position history, ∈ ℤ/2ℤ.
-    x_error_history (np.ndarray): T x L x L array representing the horizontal error history, ∈ ℤ/2ℤ.
-    y_error_history (np.ndarray): T x L x L array representing the vertical error history, ∈ ℤ/2ℤ.
+    history (tuple): Tuple containing the anyon position, horizontal error, and vertical error history. Each is a T x N x L x L array, ∈ ℤ/2ℤ.
+    shot (int): The shot number to plot.
     dual (bool): Whether to display the errors on the dual lattice.
 
     Returns:
     animation.FuncAnimation: Animation of the anyon evolution.
     """
+
+    q_history = history[0][:,shot,...]
+    x_error_history = history[1][:,shot,...]
+    y_error_history = history[2][:,shot,...]
 
     fig, ax = plt.subplots()
     mat = ax.matshow(q_history[0,:,:].T, origin = 'lower', cmap = mako)
