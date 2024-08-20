@@ -13,7 +13,7 @@
 ## Data format
 
 Filename: `run_9_{L}_{10000*p}_{n}.npy`
-Contains Contains single float of fail rate.
+Contains single float of fail rate.
 
 ## Runtime
 
