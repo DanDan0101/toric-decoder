@@ -10,6 +10,7 @@ OONO_PURI = cp.array([
     [[1, 2, 1], [2, -12, 2], [1, 2, 1]],
     [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
 ])
+from stride_tricks import sliding_window_view
 
 from plotting import plot_state
 from matplotlib.axes import Axes
@@ -77,7 +78,7 @@ class State:
         None
         """
         
-        swv = cp.lib.stride_tricks.sliding_window_view(cp.pad(self.Φ, ((0,0),(1,1),(1,1)), mode = 'wrap'), (1, 3, 3))
+        swv = sliding_window_view(cp.pad(self.Φ, ((0,0),(1,1),(1,1)), mode = 'wrap'), (1, 3, 3))
         direction = swv.reshape(self.N, self.L, self.L, 9)[:,:,:,1::2].argmax(axis = 3).astype(cp.uint8) # 0, 1, 2, 3
         direction += 1 # 1, 2, 3, 4 to allow for masking
         direction *= ((self.q == 1) & (cp.random.random((self.N, self.L, self.L)) < 0.5))
