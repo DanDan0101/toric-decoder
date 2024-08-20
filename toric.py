@@ -165,6 +165,7 @@ def decoder_2D_density(state: State, T: int, c: int, η: float, p_error: float) 
             break
     return density
 
+@jit
 def decoder_2D_history(state: State, T: int, c: int, η: float, p_error: float) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Run a 2D decoder on a state for T epochs, keeping track of the anyon and error history.

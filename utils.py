@@ -78,8 +78,7 @@ def laplace_2d(a: np.ndarray) -> np.ndarray:
     """
     assert a.ndim == 2
 
-    b = np.zeros_like(a)
-    b -= 3 * a
+    b = -3 * a
     b += (roll_2d(a, (0, 1)) + roll_2d(a, (0, -1)) + roll_2d(a, (1, 0)) + roll_2d(a, (-1, 0))) / 2
     b += (roll_2d(a, (1, 1)) + roll_2d(a, (-1, -1)) + roll_2d(a, (1, -1)) + roll_2d(a, (-1, 1))) / 4
 
@@ -98,8 +97,7 @@ def laplace_parallel(a: np.ndarray) -> np.ndarray:
     """
     assert a.ndim == 3
 
-    b = np.zeros_like(a)
-    b -= 3 * a
+    b = -3 * a
     b += roll_parallel(a, (0, 1)) / 2
     b += roll_parallel(a, (0, -1)) / 2
     b += roll_parallel(a, (1, 0)) / 2
