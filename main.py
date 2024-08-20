@@ -20,7 +20,7 @@ args = parser.parse_args()
 n = args.n # TODO
 debug = (n == -1)
 
-L = 100
+L = 400
 
 N = int(200000000/L**2) # Assuming 16 GB of GPU memory
 if debug:
