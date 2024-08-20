@@ -5,13 +5,9 @@ t0 = time()
 import sys
 sys.path.insert(0, 'toric-decoder')
 
-import numpy as np
-from toric import *
+# import numpy as np
+from toric import State, decoder_2D, mwpm, pcm, logical_error
 from pymatching import Matching
-
-import os
-from multiprocess import Pool
-num_cpus = len(os.sched_getaffinity(0))
 
 # Parse command line arguments
 import argparse
@@ -21,36 +17,29 @@ parser = argparse.ArgumentParser(
 )
 parser.add_argument('-n', type = int, default = 0)
 args = parser.parse_args()
-n = args.n # 0-999
+n = args.n # TODO
 
-L = int(20 * (1 + n // 200)) # 20, 40, 60, ..., 100
-n %= 200 # 0-199
-
-p_error = 40 + int(n // 10) # 40, 41, 42, ..., 59
-n %= 10 # 0-9
-
+N = 20000
+L = 100
+p_error = 0.004
 η = 0.1
 c = 16
 T = L
-shots = 100000
 
 matching = Matching(pcm(L))
 
-def f(*_):
-    mystate = State(L)
+state = State(N, L)
 
-    decoder_2D(mystate, T, c, η, p_error / 10000)
+decoder_2D(state, T, c, η, p_error)
 
-    x_correction, y_correction = mwpm(matching, mystate.q)
-    fail = logical_error(x_correction ^ mystate.x_error, y_correction ^ mystate.y_error)
-    return fail
+x_correction, y_correction = mwpm(matching, state.q)
+fail = logical_error(x_correction ^ state.x_error.get(), y_correction ^ state.y_error.get())
 
-with Pool(num_cpus) as p:
-    result = p.map(f, range(shots))
+fail_rate = fail.mean() # Just a single float
 
-fail_rate = np.array(result).mean() # Just a single float
+print(f"Fail rate: {fail_rate}")
 
-np.save(f"data/run_9/run_9_{L}_{p_error}_{n}.npy", fail_rate)
+# np.save(f"data/run_9/run_9_{L}_{p_error}_{n}.npy", fail_rate)
 
 elapsed = time() - t0
 # print(f"Job for L={L} and p={p_error / 10000} took time:")
