@@ -9,6 +9,12 @@ import numpy as np
 from toric import State, decoder_2D, mwpm, pcm, logical_error
 from pymatching import Matching
 
+import subprocess as sp
+command = "nvidia-smi --query-gpu=memory.free --format=csv"
+memory_free_info = sp.check_output(command.split()).decode('ascii').split('\n')[:-1][1:]
+memory_free_values = [int(x.split()[0]) for x in memory_free_info]
+mem = memory_free_values[0] / 1000 # GB of VRAM
+
 # Parse command line arguments
 import argparse
 parser = argparse.ArgumentParser(
@@ -23,12 +29,9 @@ debug = (n == -1)
 L = int(100 * (n // 11 + 1)) # L = 100, 200, 300, 400, 500
 p_error = ((n % 11) + 35) / 10000 # p_error = 0.0035, 0.0036, ..., 0.0045
 
-N = int(24000/(L/100)**2) # Assuming 16 GB of GPU memory
-if debug:
-    N = int(9000/(L/100)**2) # Assuming 6 GB of GPU memory
-
-# R = int(420*(L/100)**2) # Repetitions, statistical
-R = int(40 / (L/100)) # Ensure total runtime of about an hour
+N = int(1500*mem/(L/100)**2)
+# R = int(10**7/N) # Repetitions, statistical
+R = int(40 / (L/100)) # Ensure total runtime of no more than about an hour, assuming ~90s * L/100 per repetition
 if R < 1 or debug:
     R = 1
     print("Warning: R < 1, setting R = 1")
@@ -47,7 +50,7 @@ for i in range(R):
     x_correction, y_correction = mwpm(matching, state.q)
     fails[i] = logical_error(x_correction ^ state.x_error.get(), y_correction ^ state.y_error.get()).mean()
 
-fail_rate = fails.mean() # Just a single float
+fail_rate = np.array([fails.mean(), N*R])
 
 np.save(f"data/run_10/run_10_{n}.npy", fail_rate)
 
