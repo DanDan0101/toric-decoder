@@ -253,7 +253,7 @@ def pcm(L: int) -> csc_matrix:
     data = np.ones(4 * L**2, dtype = np.uint8)
     return csc_matrix((data, (row_ind, col_ind)), shape = (L**2, 2 * L**2))
 
-def mwpm(matching: Matching, q: cp.ndarray) -> tuple[np.ndarray, np.ndarray]:
+def mwpm(matching: Matching, q: cp.ndarray) -> tuple[cp.ndarray, cp.ndarray]:
     """
     Computes the minimum-weight perfect-matching correction for a given anyon state.
 
@@ -262,32 +262,30 @@ def mwpm(matching: Matching, q: cp.ndarray) -> tuple[np.ndarray, np.ndarray]:
     q (cp.ndarray): N x L x L array representing the anyon field, ∈ ℤ/2ℤ.
 
     Returns:
-    np.ndarray: N x L x L array representing the horizontal correction, ∈ ℤ/2ℤ.
-    np.ndarray: N x L x L array representing the vertical correction, ∈ ℤ/2ℤ.
+    cp.ndarray: N x L x L array representing the horizontal correction, ∈ ℤ/2ℤ.
+    cp.ndarray: N x L x L array representing the vertical correction, ∈ ℤ/2ℤ.
     """
-
-    q_a = q.get() # Move array to CPU
     
-    N = q_a.shape[0]
-    L = q_a.shape[1]
+    N = q.shape[0]
+    L = q.shape[1]
 
-    x_correction = np.empty((N, L, L), dtype = np.uint8)
-    y_correction = np.empty((N, L, L), dtype = np.uint8)
+    x_correction = cp.empty((N, L, L), dtype = cp.uint8)
+    y_correction = cp.empty((N, L, L), dtype = cp.uint8)
 
     for n in range(N):
-        correction = matching.decode(q_a[n,:,:].ravel())
+        correction = cp.asarray(matching.decode(q[n,:,:].ravel().get())) # Avoid OOM in CPU memory
         x_correction[n,:,:] = correction[:L**2].reshape(L,L)
         y_correction[n,:,:] = correction[L**2:].reshape(L,L)
 
     return x_correction, y_correction
 
-def logical_error(x_error: np.ndarray, y_error: np.ndarray) -> np.ndarray:
+def logical_error(x_error: cp.ndarray, y_error: cp.ndarray) -> np.ndarray:
     """
     Checks if the error configuration corresponds to a logical error.
 
     Parameters:
-    x_error (np.ndarray): N x L x L array representing the horizontal error configuration, ∈ ℤ/2ℤ.
-    y_error (np.ndarray): N x L x L array representing the vertical error configuration, ∈ ℤ/2ℤ.
+    x_error (cp.ndarray): N x L x L array representing the horizontal error configuration, ∈ ℤ/2ℤ.
+    y_error (cp.ndarray): N x L x L array representing the vertical error configuration, ∈ ℤ/2ℤ.
 
     Returns:
     np.ndarray: Array of length N containing whether there is a logical error for each state, ∈ ℤ/2ℤ.
@@ -296,4 +294,4 @@ def logical_error(x_error: np.ndarray, y_error: np.ndarray) -> np.ndarray:
     x_parity = (x_error.sum(axis = 1) % 2).astype(np.uint8)
     y_parity = (y_error.sum(axis = 2) % 2).astype(np.uint8)
 
-    return np.count_nonzero(x_parity | y_parity, axis = 1) > 0
+    return (cp.count_nonzero(x_parity | y_parity, axis = 1) > 0).get()

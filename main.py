@@ -58,7 +58,7 @@ for i in range(R):
     state = State(N, L)
     decoder_2D(state, T, c, η, p_error)
     x_correction, y_correction = mwpm(matching, state.q)
-    fails.append(logical_error(x_correction ^ state.x_error.get(), y_correction ^ state.y_error.get()).mean())
+    fails.append(logical_error(x_correction ^ state.x_error, y_correction ^ state.y_error).mean())
     if time() - t0 > TIMELIMIT:
         break
 
