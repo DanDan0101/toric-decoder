@@ -33,7 +33,7 @@ else:
     L = int(100 * (n // 11 + 1)) # L = 100, 200, 300, 400, 500
     p_error = ((n % 11) + 35) / 10000 # p_error = 0.0035, 0.0036, ..., 0.0045
 
-N = int(1500*mem/(L/100)**2)
+N = int(1000*mem/(L/100)**2)
 # R = int(10**7/N) # Repetitions, statistical
 R = int(40 / (L/100)) # Ensure total runtime of no more than about an hour, assuming ~90s * L/100 per repetition
 if R < 1 or debug:
