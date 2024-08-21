@@ -26,8 +26,12 @@ args = parser.parse_args()
 n = args.n # 0 - 54
 debug = (n == -1)
 
-L = int(100 * (n // 11 + 1)) # L = 100, 200, 300, 400, 500
-p_error = ((n % 11) + 35) / 10000 # p_error = 0.0035, 0.0036, ..., 0.0045
+if debug:
+    L = 50
+    p_error = 0.004
+else:
+    L = int(100 * (n // 11 + 1)) # L = 100, 200, 300, 400, 500
+    p_error = ((n % 11) + 35) / 10000 # p_error = 0.0035, 0.0036, ..., 0.0045
 
 N = int(1500*mem/(L/100)**2)
 # R = int(10**7/N) # Repetitions, statistical
@@ -52,7 +56,10 @@ for i in range(R):
 
 fail_rate = np.array([fails.mean(), N*R])
 
-np.save(f"data/run_10/run_10_{n}.npy", fail_rate)
+if debug:
+    print(fail_rate)
+else:
+    np.save(f"data/run_10/run_10_{n}.npy", fail_rate)
 
 elapsed = time() - t0
 # print(f"Job for L={L} and p={p_error / 10000} took time:")
