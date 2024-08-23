@@ -9,7 +9,8 @@ OONO_PURI = cp.array([
     [[0, 0, 0], [0, 0, 0], [0, 0, 0]],
     [[1, 2, 1], [2, -12, 2], [1, 2, 1]],
     [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
-])
+], dtype = cp.float32)
+k = cp.array([0,1,1], dtype = cp.uint8)
 from stride_tricks import sliding_window_view
 
 from plotting import plot_state
@@ -42,7 +43,7 @@ class State:
     
     @property
     def ρ(self) -> float:
-        return cp.count_nonzero(self.q) / self.L ** 2 / self.N
+        return cp.count_nonzero(self.q) / self.L**2 / self.N
     
     def draw(self) -> Axes:
         return plot_state(self)
@@ -58,17 +59,13 @@ class State:
         None
         """
 
-        k = cp.array([0,1,1], dtype = cp.uint8)
+        errors = (cp.random.random((self.N, self.L, self.L)) < p_error).astype(cp.uint8)
+        self.q ^= correlate1d(errors, k, axis = 2, mode = 'wrap') % 2
+        self.x_error ^= errors
 
-        x_errors = (cp.random.random((self.N, self.L, self.L)) < p_error).astype(cp.uint8)
-        horiz_anyons = correlate1d(x_errors, k, axis = 2, mode = 'wrap') % 2
-
-        y_errors = (cp.random.random((self.N, self.L, self.L)) < p_error).astype(cp.uint8)
-        vert_anyons = correlate1d(y_errors, k, axis = 1, mode = 'wrap') % 2
-        
-        self.q ^= vert_anyons ^ horiz_anyons
-        self.x_error ^= x_errors
-        self.y_error ^= y_errors
+        errors = (cp.random.random((self.N, self.L, self.L)) < p_error).astype(cp.uint8)
+        self.q ^= correlate1d(errors, k, axis = 1, mode = 'wrap') % 2
+        self.y_error ^= errors
     
     def update_anyon(self) -> None:
         """
@@ -83,36 +80,36 @@ class State:
         direction += 1 # 1, 2, 3, 4 to allow for masking
         direction *= ((self.q == 1) & (cp.random.random((self.N, self.L, self.L)) < 0.5))
 
-        left = (direction == 1) # -x
-        down = (direction == 2) # -y
-        up = (direction == 3) # +y
-        right = (direction == 4) # +x
+        # -x
+        indicator = (direction == 1)
+        self.q ^= indicator
+        self.q[:,:-1,:] ^= indicator[:,1:,:]
+        self.q[:,-1,:] ^= indicator[:,0,:]
+        self.y_error ^= indicator
 
-        self.q ^= (left | down | up | right)
+        # -y
+        indicator = (direction == 2)
+        self.q ^= indicator
+        self.q[:,:,:-1] ^= indicator[:,:,1:]
+        self.q[:,:,-1] ^= indicator[:,:,0]
+        self.x_error ^= indicator
 
-        # self.q ^= cp.roll(left, -1, axis = 1)
-        self.q[:,:-1,:] ^= left[:,1:,:]
-        self.q[:,-1,:] ^= left[:,0,:]
-        self.y_error ^= left
+        # +y
+        indicator = (direction == 3)
+        self.q ^= indicator
+        self.q[:,:,1:] ^= indicator[:,:,:-1]
+        self.q[:,:,0] ^= indicator[:,:,-1]
+        self.x_error[:,:,1:] ^= indicator[:,:,:-1]
+        self.x_error[:,:,0] ^= indicator[:,:,-1]
 
-        # self.q ^= cp.roll(down, -1, axis = 2)
-        self.q[:,:,:-1] ^= down[:,:,1:]
-        self.q[:,:,-1] ^= down[:,:,0]
-        self.x_error ^= down
-
-        # self.q ^= cp.roll(up, 1, axis = 2)
-        self.q[:,:,1:] ^= up[:,:,:-1]
-        self.q[:,:,0] ^= up[:,:,-1]
-        # self.x_error ^= cp.roll(up, 1, axis = 2)
-        self.x_error[:,:,1:] ^= up[:,:,:-1]
-        self.x_error[:,:,0] ^= up[:,:,-1]
-
-        # self.q ^= cp.roll(right, 1, axis = 1)
-        self.q[:,1:,:] ^= right[:,:-1,:]
-        self.q[:,0,:] ^= right[:,-1,:]
-        # self.y_error ^= cp.roll(right, 1, axis = 1)
-        self.y_error[:,1:,:] ^= right[:,:-1,:]
-        self.y_error[:,0,:] ^= right[:,-1,:]
+        # +x
+        indicator = (direction == 4)
+        self.q ^= indicator
+        self.q[:,1:,:] ^= indicator[:,:-1,:]
+        self.q[:,0,:] ^= indicator[:,-1,:]
+        self.y_error[:,1:,:] ^= indicator[:,:-1,:]
+        self.y_error[:,0,:] ^= indicator[:,-1,:]
+        
 
     def update_field(self, η: float) -> None:
         """
@@ -153,7 +150,7 @@ def decoder_2D(state: State, T: int, c: int, η: float, p_error: float) -> None:
         if p_error == 0 and state.ρ == 0:
             break
 
-def decoder_2D_density(state: State, T: int, c: int, η: float, p_error: float) -> np.ndarray:
+def decoder_2D_density(state: State, T: int, c: int, η: float, p_error: float) -> cp.ndarray:
     """
     Run a 2D decoder on a state for T epochs.
 
@@ -165,7 +162,7 @@ def decoder_2D_density(state: State, T: int, c: int, η: float, p_error: float) 
     p_error (float): Probability of an X error occuring per spin, per time step.
 
     Returns:
-    np.ndarray: Array of length T containing the average density of anyons at each time step.
+    cp.ndarray: Array of length T containing the average density of anyons at each time step.
     """
 
     density = cp.empty(T, dtype = cp.float32)
@@ -181,9 +178,9 @@ def decoder_2D_density(state: State, T: int, c: int, η: float, p_error: float) 
 
         if p_error == 0 and state.ρ == 0:
             break
-    return density.get()
+    return density
 
-def decoder_2D_history(state: State, T: int, c: int, η: float, p_error: float) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+def decoder_2D_history(state: State, T: int, c: int, η: float, p_error: float) -> tuple[cp.ndarray, cp.ndarray, cp.ndarray]:
     """
     Run a 2D decoder on a state for T epochs, keeping track of the anyon and error history.
 
@@ -195,9 +192,9 @@ def decoder_2D_history(state: State, T: int, c: int, η: float, p_error: float) 
     p_error (float): Probability of an X error occuring per spin, per time step.
 
     Returns:
-    np.ndarray: T x N x L x L array representing the anyon position history, ∈ ℤ/2ℤ.
-    np.ndarray: T x N x L x L array representing the horizontal error history, ∈ ℤ/2ℤ.
-    np.ndarray: T x N x L x L array representing the vertical error history, ∈ ℤ/2ℤ.
+    cp.ndarray: T x N x L x L array representing the anyon position history, ∈ ℤ/2ℤ.
+    cp.ndarray: T x N x L x L array representing the horizontal error history, ∈ ℤ/2ℤ.
+    cp.ndarray: T x N x L x L array representing the vertical error history, ∈ ℤ/2ℤ.
     """
 
     q_history = cp.empty((2*T, state.N, state.L, state.L), dtype = cp.uint8)
@@ -220,7 +217,7 @@ def decoder_2D_history(state: State, T: int, c: int, η: float, p_error: float) 
 
         if p_error == 0 and state.ρ == 0:
             break
-    return q_history.get(), x_error_history.get(), y_error_history.get()
+    return q_history, x_error_history, y_error_history
 
 def pcm(L: int) -> csc_matrix:
     """
@@ -279,7 +276,7 @@ def mwpm(matching: Matching, q: cp.ndarray) -> tuple[cp.ndarray, cp.ndarray]:
 
     return x_correction, y_correction
 
-def logical_error(x_error: cp.ndarray, y_error: cp.ndarray) -> np.ndarray:
+def logical_error(x_error: cp.ndarray, y_error: cp.ndarray) -> cp.ndarray:
     """
     Checks if the error configuration corresponds to a logical error.
 
@@ -288,10 +285,10 @@ def logical_error(x_error: cp.ndarray, y_error: cp.ndarray) -> np.ndarray:
     y_error (cp.ndarray): N x L x L array representing the vertical error configuration, ∈ ℤ/2ℤ.
 
     Returns:
-    np.ndarray: Array of length N containing whether there is a logical error for each state, ∈ ℤ/2ℤ.
+    cp.ndarray: Array of length N containing whether there is a logical error for each state, ∈ ℤ/2ℤ.
     """
 
-    x_parity = (x_error.sum(axis = 1) % 2).astype(np.uint8)
-    y_parity = (y_error.sum(axis = 2) % 2).astype(np.uint8)
+    x_parity = (x_error.sum(axis = 1) % 2).astype(cp.uint8)
+    y_parity = (y_error.sum(axis = 2) % 2).astype(cp.uint8)
 
-    return (cp.count_nonzero(x_parity | y_parity, axis = 1) > 0).get()
+    return cp.count_nonzero(x_parity | y_parity, axis = 1) > 0
