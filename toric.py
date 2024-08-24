@@ -4,6 +4,7 @@ from scipy.sparse import csc_matrix
 from pymatching import Matching
 
 import cupy as cp
+rng = cp.random.default_rng()
 from cupyx.scipy.ndimage import correlate1d, correlate
 OONO_PURI = cp.array([
     [[0, 0, 0], [0, 0, 0], [0, 0, 0]],
@@ -59,13 +60,15 @@ class State:
         None
         """
 
-        errors = (cp.random.random((self.N, self.L, self.L)) < p_error).astype(cp.uint8)
+        errors = (rng.random((self.N, self.L, self.L), dtype = cp.float32) < p_error).astype(cp.uint8)
         self.q ^= correlate1d(errors, k, axis = 2, mode = 'wrap') % 2
         self.x_error ^= errors
 
-        errors = (cp.random.random((self.N, self.L, self.L)) < p_error).astype(cp.uint8)
+        errors = (rng.random((self.N, self.L, self.L), dtype = cp.float32) < p_error).astype(cp.uint8)
         self.q ^= correlate1d(errors, k, axis = 1, mode = 'wrap') % 2
         self.y_error ^= errors
+
+        del errors
     
     def update_anyon(self) -> None:
         """
@@ -75,10 +78,12 @@ class State:
         None
         """
         
-        swv = sliding_window_view(cp.pad(self.Φ, ((0,0),(1,1),(1,1)), mode = 'wrap'), (1, 3, 3))
-        direction = swv.reshape(self.N, self.L, self.L, 9)[:,:,:,1::2].argmax(axis = 3).astype(cp.uint8) # 0, 1, 2, 3
+        # TODO: Optimize - the reshape here is creating a copy, which isn't great.
+        swv = sliding_window_view(cp.pad(self.Φ, ((0,0),(1,1),(1,1)), mode = 'wrap'), (1, 3, 3)).reshape(self.N, self.L, self.L, 9)[:,:,:,1::2]
+        direction = swv.argmax(axis = 3).astype(cp.uint8) # 0, 1, 2, 3
+        del swv
         direction += 1 # 1, 2, 3, 4 to allow for masking
-        direction *= ((self.q == 1) & (cp.random.random((self.N, self.L, self.L)) < 0.5))
+        direction *= ((self.q == 1) & (rng.random((self.N, self.L, self.L), dtype = cp.float32) < 0.5))
 
         # -x
         indicator = (direction == 1)
@@ -109,6 +114,8 @@ class State:
         self.q[:,0,:] ^= indicator[:,-1,:]
         self.y_error[:,1:,:] ^= indicator[:,:-1,:]
         self.y_error[:,0,:] ^= indicator[:,-1,:]
+
+        del direction, indicator
         
 
     def update_field(self, η: float) -> None:

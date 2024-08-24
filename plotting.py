@@ -1,4 +1,5 @@
 import numpy as np
+import cupy as cp
 
 import seaborn as sns
 mako = sns.color_palette("mako", as_cmap=True)
@@ -81,7 +82,7 @@ def plot_state(state, dual: bool = True) -> Axes:
     ax.add_collection(error_layout(state.x_error.get(), state.y_error.get(), dual = dual))
     return ax
 
-def plot_evolution(history: tuple[np.ndarray, np.ndarray, np.ndarray], shot: int = 0, dual: bool = True) -> animation.FuncAnimation:
+def plot_evolution(history: tuple[cp.ndarray, cp.ndarray, cp.ndarray], shot: int = 0, dual: bool = True) -> animation.FuncAnimation:
     """
     Plot the evolution of the anyon position history.
 
@@ -94,9 +95,9 @@ def plot_evolution(history: tuple[np.ndarray, np.ndarray, np.ndarray], shot: int
     animation.FuncAnimation: Animation of the anyon evolution.
     """
 
-    q_history = history[0][:,shot,...]
-    x_error_history = history[1][:,shot,...]
-    y_error_history = history[2][:,shot,...]
+    q_history = history[0][:,shot,...].get()
+    x_error_history = history[1][:,shot,...].get()
+    y_error_history = history[2][:,shot,...].get()
 
     fig, ax = plt.subplots()
     mat = ax.matshow(q_history[0,:,:].T, origin = 'lower', cmap = mako)

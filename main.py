@@ -7,6 +7,7 @@ import sys
 sys.path.insert(0, 'toric-decoder')
 
 import numpy as np
+import cupy as cp
 from toric import State, decoder_2D, mwpm, pcm, logical_error
 from pymatching import Matching
 
@@ -39,7 +40,9 @@ else:
     L = int(100 * (n // 11 + 1)) # L = 100, 200, 300, 400, 500
     p_error = ((n % 11) + 35) / 10000 # p_error = 0.0035, 0.0036, ..., 0.0045
 
-N = int(1500*mem/(L/100)**2)
+p_error = cp.float32(p_error)
+
+N = int(1000*mem/(L/100)**2) # I have no clue what the memory footprint of this program is :(
 # R = int(10**7/N) # Repetitions, statistical
 R = int(40 * (TIMELIMIT/3600) / (L/100)) # Assuming ~90s * L/100 per repetition
 if R < 1 or debug:
