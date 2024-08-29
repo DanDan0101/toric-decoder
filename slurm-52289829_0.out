@@ -1,0 +1,4 @@
+Running on NVIDIA A40 with 47.29 GB of VRAM.
+1034362 samples for L=100 and p=0.0035 took time:
+01:01:08
+Actually utilized 45.81 GB of VRAM.
