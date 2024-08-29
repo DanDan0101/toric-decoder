@@ -1,7 +1,9 @@
 from time import time
 from time import strftime, gmtime
 t0 = time()
-TIMELIMIT = 3600 # 1 hour
+TIMELIMIT = 3600 * 12 # 12 hours
+BUFFER = 1800 # 30 minutes
+TIMELIMIT -= BUFFER
 
 import sys
 sys.path.insert(0, 'toric-decoder')
