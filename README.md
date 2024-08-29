@@ -8,6 +8,7 @@ We assume that only $X$ errors may occur, independently Bernoulli distributed on
 
 * `numpy`
 * `cupy`
+* `numba`
 * `matplotlib`
 * `seaborn`
 * `pymatching`

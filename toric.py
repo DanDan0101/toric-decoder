@@ -12,7 +12,8 @@ OONO_PURI = cp.array([
     [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
 ], dtype = cp.float32)
 k = cp.array([0,1,1], dtype = cp.uint8)
-from stride_tricks import sliding_window_view
+
+from utils import neighbor_argmax
 
 from plotting import plot_state
 from matplotlib.axes import Axes
@@ -43,6 +44,10 @@ class State:
         return self.q.shape[1]
     
     @property
+    def dims(self) -> tuple[int, int, int]:
+        return self.q.shape
+    
+    @property
     def ρ(self) -> float:
         return cp.count_nonzero(self.q) / self.L**2 / self.N
     
@@ -55,16 +60,13 @@ class State:
 
         Parameters:
         p_error (float): The probability of an X error occuring per spin.
-
-        Returns:
-        None
         """
 
-        errors = (rng.random((self.N, self.L, self.L), dtype = cp.float32) < p_error).astype(cp.uint8)
+        errors = (rng.random(self.dims, dtype = cp.float32) < p_error).astype(cp.uint8)
         self.q ^= correlate1d(errors, k, axis = 2, mode = 'wrap') % 2
         self.x_error ^= errors
 
-        errors = (rng.random((self.N, self.L, self.L), dtype = cp.float32) < p_error).astype(cp.uint8)
+        errors = (rng.random(self.dims, dtype = cp.float32) < p_error).astype(cp.uint8)
         self.q ^= correlate1d(errors, k, axis = 1, mode = 'wrap') % 2
         self.y_error ^= errors
 
@@ -73,17 +75,11 @@ class State:
     def update_anyon(self) -> None:
         """
         Update the anyon state by moving to the neighbor with largest field value with probability 1/2.
-
-        Returns:
-        None
         """
-        
-        # TODO: Optimize - the reshape here is creating a copy, which isn't great.
-        swv = sliding_window_view(cp.pad(self.Φ, ((0,0),(1,1),(1,1)), mode = 'wrap'), (1, 3, 3)).reshape(self.N, self.L, self.L, 9)[:,:,:,1::2]
-        direction = swv.argmax(axis = 3).astype(cp.uint8) # 0, 1, 2, 3
-        del swv
+
+        direction = neighbor_argmax(self.Φ)
         direction += 1 # 1, 2, 3, 4 to allow for masking
-        direction *= ((self.q == 1) & (rng.random((self.N, self.L, self.L), dtype = cp.float32) < 0.5))
+        direction *= ((self.q == 1) & (rng.random(self.dims, dtype = cp.float32) < 0.5))
 
         # -x
         indicator = (direction == 1)
@@ -117,16 +113,12 @@ class State:
 
         del direction, indicator
         
-
     def update_field(self, η: float) -> None:
         """
         Update the field state.
         
         Parameters:
         η (float): Smoothing parameter, ∈ (0, 1/2).
-        
-        Returns:
-        None
         """
 
         self.Φ += η / 4 * correlate(self.Φ, OONO_PURI, mode = 'wrap')
@@ -142,9 +134,6 @@ def decoder_2D(state: State, T: int, c: int, η: float, p_error: float) -> None:
     c (int): Field velocity.
     η (float): Smoothing parameter.
     p_error (float): Probability of an X error occuring per spin, per time step.
-
-    Returns:
-    None
     """
 
     for _ in range(T):
@@ -204,9 +193,9 @@ def decoder_2D_history(state: State, T: int, c: int, η: float, p_error: float) 
     cp.ndarray: T x N x L x L array representing the vertical error history, ∈ ℤ/2ℤ.
     """
 
-    q_history = cp.empty((2*T, state.N, state.L, state.L), dtype = cp.uint8)
-    x_error_history = cp.empty((2*T, state.N, state.L, state.L), dtype = cp.uint8)
-    y_error_history = cp.empty((2*T, state.N, state.L, state.L), dtype = cp.uint8)
+    q_history = cp.empty((2*T, *state.dims), dtype = cp.uint8)
+    x_error_history = cp.empty((2*T, *state.dims), dtype = cp.uint8)
+    y_error_history = cp.empty((2*T, *state.dims), dtype = cp.uint8)
     for i in range(T):
         if p_error > 0:
             state.add_errors(p_error)
@@ -273,8 +262,8 @@ def mwpm(matching: Matching, q: cp.ndarray) -> tuple[cp.ndarray, cp.ndarray]:
     N = q.shape[0]
     L = q.shape[1]
 
-    x_correction = cp.empty((N, L, L), dtype = cp.uint8)
-    y_correction = cp.empty((N, L, L), dtype = cp.uint8)
+    x_correction = cp.empty_like(q)
+    y_correction = cp.empty_like(q)
 
     for n in range(N):
         correction = cp.asarray(matching.decode(q[n,:,:].ravel().get())) # Avoid OOM in CPU memory

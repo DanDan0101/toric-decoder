@@ -19,8 +19,8 @@ try:
 except:
     handle = nvmlDeviceGetHandleByIndex(0)
 name = nvmlDeviceGetName(handle)
-mem = nvmlDeviceGetMemoryInfo(handle).free / 1024**3 # GiB of VRAM
-print(f"Running on {name} with {mem:.2f} GiB of VRAM.")
+mem = nvmlDeviceGetMemoryInfo(handle).free / 1000**3 # GB of VRAM
+print(f"Running on {name} with {mem:.2f} GB of VRAM.")
 
 # Parse command line arguments
 import argparse
@@ -42,9 +42,9 @@ else:
 
 p_error = cp.float32(p_error)
 
-N = int(1000*mem/(L/100)**2) # I have no clue what the memory footprint of this program is :(
-# R = int(10**7/N) # Repetitions, statistical
-R = int(40 * (TIMELIMIT/3600) / (L/100)) # Assuming ~90s * L/100 per repetition
+N = int(6000*mem/(L/100)**2) # 16 N L^2 < mem
+R = int(10**7/N) # Repetitions, statistical
+# R = int(40 * (TIMELIMIT/3600) / (L/100)) # Assuming ~90s * L/100 per repetition
 if R < 1 or debug:
     R = 1
     print("Warning: setting R = 1")
@@ -71,7 +71,7 @@ fail_rate = np.array([np.mean(fails), N*R])
 if debug:
     print(f"Failure rate: {fail_rate}")
 else:
-    np.save(f"data/run_10/run_10_{n}.npy", fail_rate)
+    np.save(f"data/run_11/run_11_{n}.npy", fail_rate)
 
 elapsed = time() - t0
 print(f"{N*R} samples for L={L} and p={p_error:.4f} took time:")
