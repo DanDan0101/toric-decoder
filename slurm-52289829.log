@@ -1,0 +1,20 @@
+Running on NVIDIA A40 with 47.29 GB of VRAM.
+1034362 samples for L=100 and p=0.0035 took time:
+01:01:08
+Actually utilized 45.81 GB of VRAM.
+Running on NVIDIA A100-SXM4-40GB with 41.80 GB of VRAM.
+228585 samples for L=200 and p=0.0035 took time:
+01:04:44
+Actually utilized 40.50 GB of VRAM.
+Running on NVIDIA A100-PCIE-40GB with 41.80 GB of VRAM.
+72565 samples for L=300 and p=0.0035 took time:
+01:10:58
+Actually utilized 40.50 GB of VRAM.
+Running on NVIDIA A100-SXM4-40GB with 41.80 GB of VRAM.
+32656 samples for L=400 and p=0.0035 took time:
+01:12:17
+Actually utilized 40.50 GB of VRAM.
+Running on NVIDIA GeForce RTX 2080 Ti with 11.33 GB of VRAM.
+8496 samples for L=500 and p=0.0035 took time:
+01:07:34
+Actually utilized 10.98 GB of VRAM.
