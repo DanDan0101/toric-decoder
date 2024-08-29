@@ -1,0 +1,165 @@
+Running on NVIDIA A100-SXM4-80GB with 78.69 GiB of VRAM.
+1495015 samples for L=100 and p=0.0035 took time:
+01:00:16
+Running on NVIDIA A40 with 44.04 GiB of VRAM.
+1144962 samples for L=100 and p=0.0036 took time:
+01:01:55
+Running on NVIDIA A40 with 44.04 GiB of VRAM.
+1144962 samples for L=100 and p=0.0037 took time:
+01:02:10
+Running on NVIDIA GeForce RTX 3090 with 23.39 GiB of VRAM.
+935600 samples for L=100 and p=0.0038 took time:
+00:56:01
+Running on NVIDIA GeForce RTX 3090 with 23.39 GiB of VRAM.
+935600 samples for L=100 and p=0.0039 took time:
+00:42:44
+Running on NVIDIA GeForce RTX 3090 with 23.39 GiB of VRAM.
+935600 samples for L=100 and p=0.0040 took time:
+00:54:28
+Running on NVIDIA GeForce RTX 3090 with 23.39 GiB of VRAM.
+935600 samples for L=100 and p=0.0041 took time:
+00:40:30
+Running on NVIDIA GeForce RTX 3090 with 23.39 GiB of VRAM.
+935600 samples for L=100 and p=0.0042 took time:
+00:50:20
+Running on NVIDIA GeForce RTX 3090 with 23.39 GiB of VRAM.
+935600 samples for L=100 and p=0.0043 took time:
+00:41:53
+Running on Tesla P100-PCIE-16GB with 15.61 GiB of VRAM.
+436968 samples for L=100 and p=0.0044 took time:
+01:00:09
+Running on Tesla P100-PCIE-16GB with 15.61 GiB of VRAM.
+436968 samples for L=100 and p=0.0045 took time:
+01:00:20
+Running on Tesla P100-PCIE-16GB with 15.61 GiB of VRAM.
+58515 samples for L=200 and p=0.0035 took time:
+01:00:20
+Running on NVIDIA A100-SXM4-80GB with 78.69 GiB of VRAM.
+216381 samples for L=200 and p=0.0036 took time:
+01:03:20
+Running on NVIDIA A100-SXM4-80GB with 78.69 GiB of VRAM.
+216381 samples for L=200 and p=0.0037 took time:
+01:03:33
+Running on NVIDIA A40 with 44.04 GiB of VRAM.
+154126 samples for L=200 and p=0.0038 took time:
+01:03:51
+Running on NVIDIA A40 with 44.04 GiB of VRAM.
+154126 samples for L=200 and p=0.0039 took time:
+01:04:09
+Running on NVIDIA A100-SXM4-80GB with 78.69 GiB of VRAM.
+216381 samples for L=200 and p=0.0040 took time:
+01:05:36
+Running on NVIDIA A100-SXM4-80GB with 78.69 GiB of VRAM.
+196710 samples for L=200 and p=0.0041 took time:
+01:00:01
+Running on NVIDIA TITAN Xp with 11.72 GiB of VRAM.
+41006 samples for L=200 and p=0.0042 took time:
+01:04:23
+Running on NVIDIA TITAN Xp with 11.72 GiB of VRAM.
+41006 samples for L=200 and p=0.0043 took time:
+01:03:29
+Running on NVIDIA TITAN Xp with 11.72 GiB of VRAM.
+41006 samples for L=200 and p=0.0044 took time:
+01:03:19
+Running on NVIDIA TITAN Xp with 11.72 GiB of VRAM.
+38077 samples for L=200 and p=0.0045 took time:
+01:02:00
+Running on NVIDIA TITAN Xp with 11.72 GiB of VRAM.
+11718 samples for L=300 and p=0.0035 took time:
+01:00:43
+Running on NVIDIA TITAN Xp with 11.72 GiB of VRAM.
+11718 samples for L=300 and p=0.0036 took time:
+01:00:32
+Running on NVIDIA TITAN Xp with 11.72 GiB of VRAM.
+11718 samples for L=300 and p=0.0037 took time:
+01:01:04
+Running on NVIDIA TITAN Xp with 11.72 GiB of VRAM.
+11718 samples for L=300 and p=0.0038 took time:
+01:00:43
+Running on NVIDIA TITAN Xp with 11.72 GiB of VRAM.
+11718 samples for L=300 and p=0.0039 took time:
+01:00:59
+Running on NVIDIA TITAN Xp with 11.72 GiB of VRAM.
+11718 samples for L=300 and p=0.0040 took time:
+01:01:10
+Running on NVIDIA TITAN Xp with 11.72 GiB of VRAM.
+11718 samples for L=300 and p=0.0041 took time:
+01:01:32
+Running on Tesla P100-PCIE-16GB with 15.61 GiB of VRAM.
+17340 samples for L=300 and p=0.0042 took time:
+01:02:46
+Running on Tesla P100-PCIE-16GB with 15.61 GiB of VRAM.
+17340 samples for L=300 and p=0.0043 took time:
+01:03:02
+Running on Tesla P100-PCIE-16GB with 15.61 GiB of VRAM.
+17340 samples for L=300 and p=0.0044 took time:
+01:04:15
+Running on Tesla P100-PCIE-16GB with 15.61 GiB of VRAM.
+15606 samples for L=300 and p=0.0045 took time:
+01:00:09
+Running on Tesla P100-PCIE-16GB with 15.61 GiB of VRAM.
+7800 samples for L=400 and p=0.0035 took time:
+01:05:16
+Running on Tesla P100-PCIE-16GB with 15.61 GiB of VRAM.
+7800 samples for L=400 and p=0.0036 took time:
+01:05:18
+Running on NVIDIA A40 with 44.04 GiB of VRAM.
+19264 samples for L=400 and p=0.0037 took time:
+01:02:47
+Running on NVIDIA A40 with 44.04 GiB of VRAM.
+19264 samples for L=400 and p=0.0038 took time:
+01:03:08
+Running on NVIDIA A100-PCIE-40GB with 38.93 GiB of VRAM.
+24330 samples for L=400 and p=0.0039 took time:
+00:48:54
+Running on NVIDIA A100-PCIE-40GB with 38.93 GiB of VRAM.
+24330 samples for L=400 and p=0.0040 took time:
+00:49:47
+Running on NVIDIA A100-PCIE-40GB with 38.93 GiB of VRAM.
+24330 samples for L=400 and p=0.0041 took time:
+00:50:39
+Running on NVIDIA GeForce RTX 2080 Ti with 10.55 GiB of VRAM.
+6590 samples for L=400 and p=0.0042 took time:
+00:30:55
+Running on NVIDIA GeForce RTX 2080 Ti with 10.55 GiB of VRAM.
+6590 samples for L=400 and p=0.0043 took time:
+00:31:43
+Running on NVIDIA GeForce RTX 2080 Ti with 10.55 GiB of VRAM.
+6590 samples for L=400 and p=0.0044 took time:
+00:33:26
+Running on NVIDIA GeForce RTX 2080 Ti with 10.55 GiB of VRAM.
+6590 samples for L=400 and p=0.0045 took time:
+00:36:05
+Running on NVIDIA GeForce RTX 2080 Ti with 10.55 GiB of VRAM.
+3376 samples for L=500 and p=0.0035 took time:
+00:28:56
+Running on NVIDIA GeForce RTX 2080 Ti with 10.55 GiB of VRAM.
+3376 samples for L=500 and p=0.0036 took time:
+00:27:57
+Running on NVIDIA GeForce RTX 2080 Ti with 10.55 GiB of VRAM.
+3376 samples for L=500 and p=0.0037 took time:
+00:27:58
+Running on NVIDIA GeForce RTX 2080 Ti with 10.55 GiB of VRAM.
+3376 samples for L=500 and p=0.0038 took time:
+00:27:59
+Running on NVIDIA GeForce RTX 2080 Ti with 10.55 GiB of VRAM.
+3376 samples for L=500 and p=0.0039 took time:
+00:29:44
+Running on NVIDIA GeForce RTX 2080 Ti with 10.55 GiB of VRAM.
+3376 samples for L=500 and p=0.0040 took time:
+00:30:24
+Running on NVIDIA GeForce RTX 2080 Ti with 10.55 GiB of VRAM.
+3376 samples for L=500 and p=0.0041 took time:
+00:30:51
+Running on NVIDIA GeForce RTX 2080 Ti with 10.55 GiB of VRAM.
+3376 samples for L=500 and p=0.0042 took time:
+00:32:48
+Running on NVIDIA TITAN Xp with 11.72 GiB of VRAM.
+2340 samples for L=500 and p=0.0043 took time:
+01:06:01
+Running on NVIDIA TITAN Xp with 11.72 GiB of VRAM.
+1872 samples for L=500 and p=0.0044 took time:
+01:09:39
+Running on NVIDIA TITAN Xp with 11.72 GiB of VRAM.
+1404 samples for L=500 and p=0.0045 took time:
+01:02:59
