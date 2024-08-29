@@ -42,7 +42,7 @@ else:
 
 p_error = cp.float32(p_error)
 
-N = int(6000*mem/(L/100)**2) # 16 N L^2 < mem
+N = int(4000*mem/(L/100)**2) # 16 N L^2 < mem ?? Real usage is always far greater; consider more extensive profiling.
 R = int(10**7/N) # Repetitions, statistical
 # R = int(40 * (TIMELIMIT/3600) / (L/100)) # Assuming ~90s * L/100 per repetition
 if R < 1 or debug:
