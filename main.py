@@ -76,4 +76,8 @@ else:
 elapsed = time() - t0
 print(f"{N*R} samples for L={L} and p={p_error:.4f} took time:")
 print(strftime("%H:%M:%S", gmtime(elapsed)))
+
+used = mem - nvmlDeviceGetMemoryInfo(handle).free / 1000**3
+print(f"Actually utilized {used:.2f} GB of VRAM.")
+
 # print(int(elapsed))
