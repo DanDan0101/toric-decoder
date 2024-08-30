@@ -3,7 +3,7 @@ from time import strftime, gmtime
 t0 = time()
 TIMELIMIT = 3600 * 12 # 12 hours
 BUFFER = 1800 # 30 minutes
-TIMELIMIT -= BUFFER
+ESTIMATE = 60 # 1 minute
 
 import sys
 sys.path.insert(0, 'toric-decoder')
@@ -60,11 +60,15 @@ matching = Matching(pcm(L))
 fails = []
 
 for i in range(R):
+    if i == 1:
+        t1 = time()
     state = State(N, L)
     decoder_2D(state, T, c, η, p_error)
     x_correction, y_correction = mwpm(matching, state.q)
     fails.append(float(logical_error(x_correction ^ state.x_error, y_correction ^ state.y_error).mean()))
-    if time() - t0 > TIMELIMIT:
+    if i == 1:
+        ESTIMATE = time() - t1
+    if time() - t0 + ESTIMATE > TIMELIMIT - BUFFER:
         break
 
 R = len(fails)
