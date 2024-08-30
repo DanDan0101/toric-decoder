@@ -2,7 +2,7 @@
 #SBATCH --job-name=main
 #SBATCH --time=12:00:00
 #SBATCH -p owners
-#SBATCH --array=0-54
+#SBATCH --array=0-999
 #SBATCH -G 1
 #SBATCH --mail-type=ALL
 

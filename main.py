@@ -32,20 +32,23 @@ parser = argparse.ArgumentParser(
 )
 parser.add_argument('-n', type = int, default = 0)
 args = parser.parse_args()
-n = args.n # 0 - 54
+n = args.n # 0 - 99
 debug = (n == -1)
+
+RUN = 13
 
 if debug:
     L = 50
     p_error = 0.004
 else:
-    L = int(100 * (n // 11 + 1)) # L = 100, 200, 300, 400, 500
-    p_error = ((n % 11) + 35) / 10000 # p_error = 0.0035, 0.0036, ..., 0.0045
+    L = int(50 * ((n % 100) // 20 + 1)) # L = 50, 100, 150, 200, 250
+    p_error = ((n % 20) + 400) / 100000 # p_error = 0.00400, 0.00401, 0.00402, ..., 0.00419
 
 p_error = cp.float32(p_error)
 
-N = int(2450/(L/100)**2 * mem) # 32 N L^2 < mem ??? WHY 32?
-R = int(10**7/N) # Repetitions, statistical
+N = int(2500/(L/100)**2 * mem) # Expect scaling as N L^2 < mem. Constant is empirically determined.
+R = TIMELIMIT # Basically repeat until time runs out no matter what
+# R = int(10**7/N) # Repetitions, statistical
 # R = int(40 * (TIMELIMIT/3600) / (L/100)) # Assuming ~90s * L/100 per repetition
 if R < 1 or debug:
     R = 1
@@ -74,13 +77,16 @@ for i in range(R):
 R = len(fails)
 fail_rate = np.array([np.mean(fails), N*R])
 
-if debug:
-    print(f"Failure rate: {fail_rate}")
+if fail_rate[0] == 0:
+    print("WARNING: No failures detected.")
 else:
-    np.save(f"data/run_11/run_11_{n}.npy", fail_rate)
+    print(f"Failure rate: {fail_rate[0]} ± {np.sqrt(fail_rate[0]*(1-fail_rate[0]) / fail_rate[1])}")
+
+if not debug:
+    np.save(f"data/run_{RUN}/run_{RUN}_{n}.npy", fail_rate)
 
 elapsed = time() - t0
-print(f"{N*R} samples for L={L} and p={p_error:.4f} took time:")
+print(f"{N*R} samples for L={L} and p={p_error:.5f} took time:")
 print(strftime("%H:%M:%S", gmtime(elapsed)))
 
 used = mem - nvmlDeviceGetMemoryInfo(handle).free / 1000**3
