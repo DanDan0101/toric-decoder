@@ -1,0 +1,269 @@
+Running on Tesla P100-PCIE-16GB with 16.76 GB of VRAM.
+5747700 samples for L=100 and p=0.0035 took time:
+11:34:39
+Actually utilized 12.74 GB of VRAM.
+
+Running on NVIDIA TITAN Xp with 12.58 GB of VRAM.
+3699480 samples for L=100 and p=0.0036 took time:
+11:31:11
+Actually utilized 9.57 GB of VRAM.
+
+Running on NVIDIA TITAN Xp with 12.58 GB of VRAM.
+3668651 samples for L=100 and p=0.0037 took time:
+11:30:01
+Actually utilized 12.04 GB of VRAM.
+
+Running on NVIDIA TITAN Xp with 12.58 GB of VRAM.
+3637822 samples for L=100 and p=0.0038 took time:
+11:31:30
+Actually utilized 9.57 GB of VRAM.
+
+Running on NVIDIA TITAN Xp with 12.58 GB of VRAM.
+3483677 samples for L=100 and p=0.0039 took time:
+11:31:02
+Actually utilized 12.04 GB of VRAM.
+
+Running on NVIDIA TITAN Xp with 12.58 GB of VRAM.
+3668651 samples for L=100 and p=0.0040 took time:
+11:34:30
+Actually utilized 9.57 GB of VRAM.
+
+Running on NVIDIA TITAN Xp with 12.58 GB of VRAM.
+3668651 samples for L=100 and p=0.0041 took time:
+11:33:14
+Actually utilized 9.57 GB of VRAM.
+
+Running on NVIDIA TITAN Xp with 12.58 GB of VRAM.
+3668651 samples for L=100 and p=0.0042 took time:
+11:31:46
+Actually utilized 9.57 GB of VRAM.
+
+Running on Tesla V100-PCIE-32GB with 33.71 GB of VRAM.
+9991938 samples for L=100 and p=0.0043 took time:
+11:03:28
+Actually utilized 25.61 GB of VRAM.
+
+Running on NVIDIA TITAN V with 12.27 GB of VRAM.
+9978260 samples for L=100 and p=0.0044 took time:
+10:24:05
+Actually utilized 9.33 GB of VRAM.
+
+Running on NVIDIA TITAN V with 12.27 GB of VRAM.
+9978260 samples for L=100 and p=0.0045 took time:
+10:28:50
+Actually utilized 9.33 GB of VRAM.
+
+Running on NVIDIA TITAN V with 12.27 GB of VRAM.
+1547678 samples for L=200 and p=0.0035 took time:
+11:32:18
+Actually utilized 10.53 GB of VRAM.
+
+Running on NVIDIA TITAN V with 12.27 GB of VRAM.
+1540165 samples for L=200 and p=0.0036 took time:
+11:30:43
+Actually utilized 10.53 GB of VRAM.
+
+Running on NVIDIA TITAN V with 12.27 GB of VRAM.
+1540165 samples for L=200 and p=0.0037 took time:
+11:33:02
+Actually utilized 9.33 GB of VRAM.
+
+Running on NVIDIA TITAN V with 12.27 GB of VRAM.
+1532652 samples for L=200 and p=0.0038 took time:
+11:30:23
+Actually utilized 9.33 GB of VRAM.
+
+Running on NVIDIA TITAN Xp with 12.58 GB of VRAM.
+462420 samples for L=200 and p=0.0039 took time:
+11:35:33
+Actually utilized 9.56 GB of VRAM.
+
+Running on NVIDIA TITAN Xp with 12.58 GB of VRAM.
+470127 samples for L=200 and p=0.0040 took time:
+11:36:34
+Actually utilized 10.79 GB of VRAM.
+
+Running on NVIDIA TITAN Xp with 12.58 GB of VRAM.
+470127 samples for L=200 and p=0.0041 took time:
+11:38:14
+Actually utilized 9.56 GB of VRAM.
+
+Running on NVIDIA TITAN Xp with 12.58 GB of VRAM.
+470127 samples for L=200 and p=0.0042 took time:
+11:38:52
+Actually utilized 9.56 GB of VRAM.
+
+Running on NVIDIA TITAN Xp with 12.58 GB of VRAM.
+462420 samples for L=200 and p=0.0043 took time:
+11:31:54
+Actually utilized 9.56 GB of VRAM.
+
+Running on NVIDIA TITAN Xp with 12.58 GB of VRAM.
+462420 samples for L=200 and p=0.0044 took time:
+11:35:09
+Actually utilized 9.56 GB of VRAM.
+
+Running on Tesla V100-SXM2-16GB with 16.56 GB of VRAM.
+1734624 samples for L=200 and p=0.0045 took time:
+11:32:10
+Actually utilized 12.58 GB of VRAM.
+
+Running on Tesla V100-SXM2-16GB with 16.56 GB of VRAM.
+563500 samples for L=300 and p=0.0035 took time:
+11:34:39
+Actually utilized 12.58 GB of VRAM.
+
+Running on Tesla V100-SXM2-16GB with 16.56 GB of VRAM.
+558992 samples for L=300 and p=0.0036 took time:
+11:31:15
+Actually utilized 12.58 GB of VRAM.
+
+Running on Tesla V100-SXM2-16GB with 16.56 GB of VRAM.
+558992 samples for L=300 and p=0.0037 took time:
+11:34:15
+Actually utilized 12.58 GB of VRAM.
+
+Running on Tesla P100-PCIE-16GB with 16.76 GB of VRAM.
+218928 samples for L=300 and p=0.0038 took time:
+11:35:36
+Actually utilized 12.73 GB of VRAM.
+
+Running on Tesla P100-PCIE-16GB with 16.76 GB of VRAM.
+218928 samples for L=300 and p=0.0039 took time:
+11:36:11
+Actually utilized 12.73 GB of VRAM.
+
+Running on Tesla P100-PCIE-16GB with 16.76 GB of VRAM.
+218928 samples for L=300 and p=0.0040 took time:
+11:37:57
+Actually utilized 12.73 GB of VRAM.
+
+Running on NVIDIA A40 with 47.29 GB of VRAM.
+450520 samples for L=300 and p=0.0041 took time:
+11:42:47
+Actually utilized 40.56 GB of VRAM.
+
+Running on NVIDIA A40 with 47.29 GB of VRAM.
+450520 samples for L=300 and p=0.0042 took time:
+11:48:10
+Actually utilized 35.92 GB of VRAM.
+
+Running on NVIDIA A40 with 47.29 GB of VRAM.
+437648 samples for L=300 and p=0.0043 took time:
+11:34:28
+Actually utilized 35.92 GB of VRAM.
+
+Running on NVIDIA A40 with 47.29 GB of VRAM.
+437648 samples for L=300 and p=0.0044 took time:
+11:43:53
+Actually utilized 40.56 GB of VRAM.
+
+Running on NVIDIA A40 with 47.29 GB of VRAM.
+424776 samples for L=300 and p=0.0045 took time:
+11:36:27
+Actually utilized 35.92 GB of VRAM.
+
+Running on NVIDIA A40 with 47.29 GB of VRAM.
+195480 samples for L=400 and p=0.0035 took time:
+11:43:02
+Actually utilized 35.92 GB of VRAM.
+
+Running on NVIDIA A40 with 47.29 GB of VRAM.
+195480 samples for L=400 and p=0.0036 took time:
+11:48:05
+Actually utilized 35.92 GB of VRAM.
+
+Running on NVIDIA A40 with 47.29 GB of VRAM.
+195480 samples for L=400 and p=0.0037 took time:
+11:48:21
+Actually utilized 35.92 GB of VRAM.
+
+Running on NVIDIA A40 with 47.29 GB of VRAM.
+195480 samples for L=400 and p=0.0038 took time:
+11:54:06
+Actually utilized 45.19 GB of VRAM.
+
+Running on NVIDIA A40 with 47.29 GB of VRAM.
+188240 samples for L=400 and p=0.0039 took time:
+11:33:53
+Actually utilized 35.92 GB of VRAM.
+
+Running on NVIDIA A40 with 47.29 GB of VRAM.
+188240 samples for L=400 and p=0.0040 took time:
+11:35:06
+Actually utilized 35.92 GB of VRAM.
+
+Running on NVIDIA A40 with 47.29 GB of VRAM.
+188240 samples for L=400 and p=0.0041 took time:
+11:44:28
+Actually utilized 35.92 GB of VRAM.
+
+Running on NVIDIA A40 with 47.29 GB of VRAM.
+181000 samples for L=400 and p=0.0042 took time:
+11:32:35
+Actually utilized 35.92 GB of VRAM.
+
+Running on NVIDIA A40 with 47.29 GB of VRAM.
+181000 samples for L=400 and p=0.0043 took time:
+11:48:32
+Actually utilized 35.92 GB of VRAM.
+
+Running on NVIDIA A40 with 47.29 GB of VRAM.
+159280 samples for L=400 and p=0.0044 took time:
+11:48:48
+Actually utilized 35.92 GB of VRAM.
+
+Running on NVIDIA A40 with 47.29 GB of VRAM.
+152040 samples for L=400 and p=0.0045 took time:
+11:53:12
+Actually utilized 35.92 GB of VRAM.
+
+Running on NVIDIA A40 with 47.29 GB of VRAM.
+101926 samples for L=500 and p=0.0035 took time:
+11:57:09
+Actually utilized 35.92 GB of VRAM.
+
+Running on NVIDIA A40 with 47.29 GB of VRAM.
+101926 samples for L=500 and p=0.0036 took time:
+11:53:30
+Actually utilized 35.92 GB of VRAM.
+
+Running on NVIDIA A40 with 47.29 GB of VRAM.
+slurmstepd: error: *** JOB 52315128 ON sh03-11n13 CANCELLED AT 2024-08-30T08:05:38 DUE TO TIME LIMIT ***
+
+Running on NVIDIA A40 with 47.29 GB of VRAM.
+97293 samples for L=500 and p=0.0038 took time:
+11:30:33
+Actually utilized 35.92 GB of VRAM.
+
+Running on NVIDIA A40 with 47.29 GB of VRAM.
+97293 samples for L=500 and p=0.0039 took time:
+11:35:46
+Actually utilized 40.55 GB of VRAM.
+
+Running on NVIDIA A40 with 47.29 GB of VRAM.
+97293 samples for L=500 and p=0.0040 took time:
+11:48:52
+Actually utilized 35.92 GB of VRAM.
+
+Running on NVIDIA A40 with 47.29 GB of VRAM.
+92660 samples for L=500 and p=0.0041 took time:
+11:43:14
+Actually utilized 40.55 GB of VRAM.
+
+Running on NVIDIA A40 with 47.29 GB of VRAM.
+88027 samples for L=500 and p=0.0042 took time:
+11:57:25
+Actually utilized 35.92 GB of VRAM.
+
+Running on NVIDIA A40 with 47.29 GB of VRAM.
+slurmstepd: error: *** JOB 52315134 ON sh03-11n10 CANCELLED AT 2024-08-30T08:05:38 DUE TO TIME LIMIT ***
+
+Running on NVIDIA A100-PCIE-40GB with 41.80 GB of VRAM.
+81920 samples for L=500 and p=0.0044 took time:
+11:57:47
+Actually utilized 39.95 GB of VRAM.
+
+Running on NVIDIA A100-PCIE-40GB with 41.80 GB of VRAM.
+slurmstepd: error: *** JOB 52311982 ON sh03-16n04 CANCELLED AT 2024-08-30T08:05:38 DUE TO TIME LIMIT ***
+

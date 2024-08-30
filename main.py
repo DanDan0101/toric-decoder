@@ -44,7 +44,7 @@ else:
 
 p_error = cp.float32(p_error)
 
-N = int(3125/(L/100)**2 * mem) # 32 N L^2 < mem ??? WHY 32?
+N = int(2450/(L/100)**2 * mem) # 32 N L^2 < mem ??? WHY 32?
 R = int(10**7/N) # Repetitions, statistical
 # R = int(40 * (TIMELIMIT/3600) / (L/100)) # Assuming ~90s * L/100 per repetition
 if R < 1 or debug:
