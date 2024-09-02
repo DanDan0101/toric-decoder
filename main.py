@@ -32,7 +32,7 @@ parser = argparse.ArgumentParser(
 )
 parser.add_argument('-n', type = int, default = 0)
 args = parser.parse_args()
-n = args.n # 0 - 99
+n = args.n # 0 - 999
 debug = (n == -1)
 
 RUN = 13
