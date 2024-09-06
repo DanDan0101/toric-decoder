@@ -35,14 +35,14 @@ args = parser.parse_args()
 n = args.n # 0 - 999
 debug = (n == -1)
 
-RUN = 13
+RUN = 14
 
 if debug:
     L = 50
     p_error = 0.004
 else:
     L = int(50 * ((n % 100) // 20 + 1)) # L = 50, 100, 150, 200, 250
-    p_error = ((n % 20) + 400) / 100000 # p_error = 0.00400, 0.00401, 0.00402, ..., 0.00419
+    p_error = ((n % 20) + 380) / 100000 # p_error = 0.00380, 0.00381, 0.00382, ..., 0.00399
 
 p_error = cp.float32(p_error)
 
