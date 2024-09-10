@@ -1,5 +1,0 @@
-Running on NVIDIA TITAN Xp with 12.58 GB of VRAM.
-Failure rate: 9.070569027030296e-05 ± 1.979270664655408e-05
-231518 samples for L=250 and p=0.00414 took time:
-11:26:33
-Actually utilized 9.75 GB of VRAM.
